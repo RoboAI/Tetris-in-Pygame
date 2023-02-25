@@ -30,19 +30,19 @@ def draw_grid(box_top):
 
 class Tetrimino:
     def __init__(self):
-        self.xy: float = [0,0]
+        self.shape: float = [0,0]
 
     def move_me(self, x:float, y:float):
-        self.xy[0] += x
-        self.xy[1] += y
+        self.shape[0] += x
+        self.shape[1] += y
 
     def get_bounds(self):
-        return [self.xy[0]-1, self.xy[1]-1, 1, 1]
+        return [self.shape[0]-1, self.shape[1]-1, 1, 1]
 
     def check_collision(self, dot):
         others_bounds = dot.get_bounds()
-        if (others_bounds[0] <= self.xy[0] and self.xy[0] <= (others_bounds[0] + others_bounds[2]) and 
-            others_bounds[1] <= self.xy[1] and self.xy[1] <= (others_bounds[1] + others_bounds[3])):
+        if (others_bounds[0] <= self.shape[0] and self.shape[0] <= (others_bounds[0] + others_bounds[2]) and 
+            others_bounds[1] <= self.shape[1] and self.shape[1] <= (others_bounds[1] + others_bounds[3])):
             return True
         else:
             return False
@@ -62,15 +62,16 @@ class Tetrimino:
 
 class TetriminoBlock(Tetrimino):
     def __init__(self):
-        self.xy = [[]]
+        self.shape = [[]] # LAST EDITTED LINE
+        self.origin: float = [0,0]
 
     def move_me(self, x: float, y: float):
-        for coords in self.xy:
+        for coords in self.shape:
             coords[0] += x
             coords[1] += y
 
     def rotate(self, degrees: int):
-        for coords in self.xy:
+        for coords in self.shape:
             new_x = (coords[0] * math.cos(degrees)) - (coords[1] * math.sin(degrees))
             new_y = (coords[1] * math.cos(degrees)) - (coords[0] * math.sin(degrees))
             coords[0] = new_x
@@ -78,7 +79,7 @@ class TetriminoBlock(Tetrimino):
 
 class IBlock(TetriminoBlock):
     def __init__(self):
-        self.xy = [[0,0],[1,0],[2,0],[3,0]]
+        self.shape = [[0,0],[1,0],[2,0],[3,0]]
     
 
 class SingleSquare:
@@ -134,12 +135,12 @@ single_box = SingleSquare()
 single_box.rect = [grid_rect[0], 0, grid_square_size, grid_square_size]
 #-----------------
 single_dot = Tetrimino()
-single_dot.xy = [grid_rect[0] + (grid_square_size / 2) + 1,
+single_dot.shape = [grid_rect[0] + (grid_square_size / 2) + 1,
                  grid_rect[1] + (grid_square_size / 2) + 1]
 single_dot.move_me(grid_square_size * 5, grid_square_size * 5)
 #------------------
 moving_dot = Tetrimino()
-moving_dot.xy = [grid_rect[0] + (grid_square_size / 2) + 1,
+moving_dot.shape = [grid_rect[0] + (grid_square_size / 2) + 1,
                  grid_rect[1] + (grid_square_size / 2) + 1]
 moving_dot.move_me(grid_square_size, grid_square_size)
 #------------------
