@@ -64,7 +64,14 @@ class TetriminoBlock(Tetrimino):
     def __init__(self):
         self.shape = [[]] # LAST EDITTED LINE
         self.origin: float = [0,0]
+        
+    # offset shape-coords to be placed on the grid
+    def offset_coords(self, x: float, y: float):
+        for i in range(len(self.shape)):
+            self.shape[i][0] = (self.shape[i][0] * grid_square_size) + x
+            self.shape[i][1] = (self.shape[i][1] * grid_square_size) + y
 
+    # add x and y to their respective coordinates
     def move_me(self, x: float, y: float):
         for coords in self.shape:
             coords[0] += x
@@ -76,6 +83,7 @@ class TetriminoBlock(Tetrimino):
             new_y = (coords[1] * math.cos(degrees)) - (coords[0] * math.sin(degrees))
             coords[0] = new_x
             coords[1] = new_y
+
 
 class IBlock(TetriminoBlock):
     def __init__(self):
@@ -144,10 +152,9 @@ moving_dot.shape = [grid_rect[0] + (grid_square_size / 2) + 1,
                  grid_rect[1] + (grid_square_size / 2) + 1]
 moving_dot.move_me(grid_square_size, grid_square_size)
 #------------------
-i_block = TetriminoBlock()
-i_block.move_me(grid_rect[0] + (grid_square_size / 2) + 1,
-                grid_rect[1] + (grid_square_size / 2) + 1)
-
+i_block = IBlock()
+i_block.offset_coords(grid_rect[0] + (grid_square_size / 2) + 1,
+                      grid_rect[1] + (grid_square_size / 2) + 1)
 
 
 while running:
@@ -175,15 +182,19 @@ while running:
         #pygame.display.set_caption(str(grid_square_size))
 
         # do a dummy move to check for collision (this dummy should be when shape is going down)
-        moving_dot.move_me(grid_square_size, grid_square_size)
-        if( moving_dot.check_collision(single_dot) ):
-            moving_dot.move_me(-grid_square_size, -grid_square_size)
-            pygame.display.set_caption("Collided!!")
+        #moving_dot.move_me(grid_square_size, grid_square_size)
+        #if( moving_dot.check_collision(single_dot) ):
+            #moving_dot.move_me(-grid_square_size, -grid_square_size)
+            #pygame.display.set_caption("Collided!!")
+        i_block.move_me(grid_square_size, grid_square_size)
+        
     #--------------------------------------------------------------
 
     #pygame.draw.rect(screen, "dark green", single_box.rect, 100)
     #pygame.draw.circle(screen, "blue", single_dot.xy, 3, 1)
     #pygame.draw.circle(screen, "blue", moving_dot.xy, 3, 1)
+    for box in i_block.shape:
+        pygame.draw.circle(screen, "blue", box, 2)
 
     # Flip the display
     pygame.display.flip()
