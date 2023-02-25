@@ -181,10 +181,12 @@ while running:
 
         #pygame.display.set_caption(str(grid_square_size))
 
-        # do a dummy move to check for collision (this dummy should be when shape is going down)
+        # do a dummy move to check for collision
         i_block.move_me(grid_square_size, grid_square_size)
 
+        # if collided then..
         #if( i_block.check_collision(single_dot) ):
+            # move the object back to its previous point
             #i_block.move_me(-grid_square_size, -grid_square_size)
             #pygame.display.set_caption("Collided!!")
         
