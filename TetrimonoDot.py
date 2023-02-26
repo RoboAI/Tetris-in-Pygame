@@ -19,6 +19,15 @@ class TetriminoDot(Tetrimino):
     def add_to_pos(self, x: float, y: float):
         self.shape[0] += x
         self.shape[1] += y
+    
+    #not working
+    def rotate(self, degrees: int):
+        abc = grid_rect[0] + (grid_square_size / 2) + 1
+        for coords in self.shape:
+            new_x = (((coords[0] / grid_square_size) - abc) * math.cos(degrees)) - (((coords[1] / grid_square_size) - abc) * math.sin(degrees))
+            new_y = (((coords[1] / grid_square_size) - abc) * math.cos(degrees)) + (((coords[0] / grid_square_size) - abc) * math.sin(degrees))
+            coords[0] = new_x
+            coords[1] = new_y
 
     def get_bounds(self):
         return [self.shape[0]-1, self.shape[1]-1, 1, 1]

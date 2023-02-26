@@ -72,7 +72,7 @@ grid_lines_colour = [30,30,30]
 grid_bk_colour = (25,25,25)
 
 # size of each Tetrimino block
-tetrimino_size = 10
+tetrimino_size = grid_square_size / 2 - 2
 
 # time calculator for shapes movement interval
 shapes_tick_interval = 750 # in milliseconds; move shape every xxx milliseconds
@@ -149,7 +149,7 @@ game_shapes = [I_block, L_block, Z_block, SQ_block]
 def draw_shape(tetri_blocks: TetriminoShape):
     # loop trough all blocks drawing each
     for block in tetri_blocks.blocks:
-        pygame.draw.circle(screen, block.colour, block.shape, tetrimino_size, 10)
+        pygame.draw.circle(screen, block.colour, block.shape, tetrimino_size, 100)
     
 def check_wall_collision(shape: Tetrimino, walls, str_wall):
     for block in shape.blocks:
