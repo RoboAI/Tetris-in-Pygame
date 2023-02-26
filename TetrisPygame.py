@@ -26,6 +26,31 @@ def draw_grid(box_top):
                          (start_x + (x * grid_spacing), start_y), 
                          (start_x + (x * grid_spacing), end_y), 1)
 
+def get_angle(p1, p2):
+    # Difference in x coordinates
+    dx = p2[0] - p1[0]
+
+    # Difference in y coordinates
+    dy = p2[1] - p1[1]
+
+    # Angle between p1 and p2 in radians
+    theta = math.atan2(dy, -dx)
+    
+    #convert to degrees
+    x = math.degrees(theta)
+
+    pygame.display.set_caption(str(x))
+
+    return x
+
+def get_distance(x1, y1, x2, y2):
+    distance = math.sqrt(((x2 - x1) ** 2) + (y2 - y1) ** 2)
+    #pygame.display.set_caption(str(distance))
+    return distance
+
+def get_distance_from_pts(p1, p2):
+    return get_distance(p1[0], p1[1], p2[0], p2[1])
+
 
 class Tetrimino:
     def __init__(self):
@@ -72,12 +97,20 @@ class Tetrimino:
 
 class TetriminoDot(Tetrimino):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.shape: float = [0,0]
     
     def __init__(self, x: float, y: float):
-        super().__init__(self)
+        super().__init__()
         self.shape: float = [x, y]
+
+    def set_pos(self, x: float, y: float):
+        self.shape[0] = x
+        self.shape[1] = y
+
+    def add_to_pos(self, x: float, y: float):
+        self.shape[0] += x
+        self.shape[1] += y
 
     def get_bounds(self):
         return [self.shape[0]-1, self.shape[1]-1, 1, 1]
@@ -91,20 +124,33 @@ class TetriminoDot(Tetrimino):
             return False
         
     def check_collision(self, col_direction, colliding_object: Tetrimino):
-        if( col_direction == "down" ):
-            if(colliding_object.shape[1] - self.shape[1] <= grid_square_size):
+        if(self.shape[0] - colliding_object.shape[0] == 0 and
+           self.shape[1] - colliding_object.shape[1] == 0):
+            return ([True, "all"])
+
+        angle = get_angle(self.shape, colliding_object.shape)
+        distance = get_distance_from_pts(self.shape, colliding_object.shape)
+        
+        if(distance > grid_block_distance):
+            return ([False, "all"])
+        
+        if(col_direction == "left"):
+            if(angle == 0):
+                return ([True, col_direction])
+        
+        elif(col_direction == "right"):
+            if(angle == 180):
+                return ([True, col_direction])
+                
+        elif(col_direction == "down"):
+            if(angle == 90):
                 return ([True, col_direction])
             
-        elif ( col_direction == "right" ):
-            if( colliding_object.shape[0] - self.shape[0] ):
+        elif(col_direction == "up"):
+            if(angle == -90):
                 return ([True, col_direction])
-            
-        elif ( col_direction == "left" ):
-            if( self.shape[0] - colliding_object.shape[0] ):
-                return ([True, col_direction])
-            
-        else:
-            return ([False, "none"])
+
+        return ([False, "none"])
         
 
 class TetriminoBlock(Tetrimino):
@@ -152,6 +198,7 @@ class IBlock(TetriminoBlock):
         super().__init__()
         self.shape = [[0,0],[1,0],[2,0],[3,0],[4,0]]
 
+
 class TetriminoShape():
     def __init__(self) -> None:
         self.blocks: TetriminoDot = []
@@ -161,21 +208,20 @@ class TetriminoShape():
              self.blocks.append(TetriminoDot(single_block[0], single_block[1]))
         
     def set_pos(self, x, y):
-        for b in self.blocks:
-            b.set_pos(x, y)
+        for i in range(len(self.blocks)):
+            self.blocks[i].shape[0] = (self.blocks[i].shape[0] * grid_square_size) + x
+            self.blocks[i].shape[1] = (self.blocks[i].shape[1] * grid_square_size) + y
             
     def add_to_pos(self, x, y):
         for b in self.blocks:
             b.add_to_pos(x, y)
-    
 
-    def check_collision(self, colliding_object: TetriminoDot):
+    def check_collision(self, col_direction, colliding_object: TetriminoDot):
         for b in self.blocks:
-            b = TetriminoDot()#####
-            if b.check_collision(colliding_object):
-                
-
-                return b
+            result = b.check_collision(col_direction, colliding_object)
+            if(result[0] == True):
+                return result
+        return ([False, "none"])
     
     
 
@@ -210,6 +256,7 @@ grid_height = screen_height
 grid_rect = [infobox_width, 0,
              grid_width, grid_height]
 grid_square_size = grid_height / grid_num_of_squares
+grid_block_distance = get_distance(0, 0, grid_square_size, grid_square_size)
 
 # time calculator for shapes movement interval
 shapes_tick_interval = 500 # in milliseconds; move shape every xxx milliseconds
@@ -229,20 +276,30 @@ running = True
 single_box = SingleSquare()
 single_box.rect = [grid_rect[0], 0, grid_square_size, grid_square_size]
 #-----------------
-single_dot = Tetrimino()
+single_dot = TetriminoDot(0, 0)
 single_dot.set_pos( grid_rect[0] + (grid_square_size / 2) + 1,
                     grid_rect[1] + (grid_square_size / 2) + 1)
 single_dot.add_to_pos(grid_square_size * 5, grid_square_size * 5)
 #------------------
-moving_dot = Tetrimino()
+moving_dot = TetriminoDot(0,0)
 moving_dot.set_pos( grid_rect[0] + (grid_square_size / 2) + 1,
                     grid_rect[1] + (grid_square_size / 2) + 1)
 moving_dot.add_to_pos(grid_square_size, grid_square_size)
+moving_dot.moving = False
 #------------------
 i_block = IBlock()
 i_block.set_pos(grid_rect[0] + (grid_square_size / 2) + 1,
                 grid_rect[1] + (grid_square_size / 2) + 1)
 #-----------------
+i_block2 = TetriminoShape()
+i_block2.set_shape([[0,0],[1,0],[2,0],[3,0],[4,0]])
+i_block2.set_pos(grid_rect[0] + (grid_square_size / 2) + 1,
+                    grid_rect[1] + (grid_square_size / 2) + 1)
+
+def draw_shape(tetri_blocks: TetriminoShape):
+    for x in tetri_blocks.blocks:
+        pygame.draw.circle(screen, "dark green", x.shape, 7, 7)
+
 
 counter2 = 0
 while running:
@@ -253,6 +310,39 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        elif event.type == pygame.KEYDOWN:
+            if(event.key == pygame.K_LEFT):
+                result = moving_dot.check_collision("left", single_dot)
+                if(result[0] == False):
+                    #pygame.display.set_caption("left!! ")
+                    moving_dot.add_to_pos(-grid_square_size, 0)
+                else:
+                    pygame.display.set_caption("left blocked!! ")
+                    
+            elif event.key == pygame.K_RIGHT:
+                result = moving_dot.check_collision("right", single_dot)
+                if(result[0] == False):
+                    #pygame.display.set_caption("right!! ")
+                    moving_dot.add_to_pos(grid_square_size, 0)
+
+            elif event.key == pygame.K_UP:
+                result = moving_dot.check_collision("up", single_dot)
+                if(result[0] == False):
+                    #pygame.display.set_caption("up!! ")
+                    moving_dot.add_to_pos(0, -grid_square_size)
+
+            elif event.key == pygame.K_DOWN:
+                result = moving_dot.check_collision("down", single_dot)
+                if(result[0] == False):
+                    #pygame.display.set_caption("down!! ")
+                    moving_dot.add_to_pos(0, grid_square_size)
+                else:
+                    pygame.display.set_caption("down blocked!! ")
+
+            get_angle(moving_dot.shape, single_dot.shape)
+            get_distance_from_pts(moving_dot.shape, single_dot.shape)
+            #get_distance(0,0,grid_square_size, grid_square_size)
 
     # Fill the background with white
     screen.fill((255, 255, 255))
@@ -281,14 +371,18 @@ while running:
                 moving_dot.add_to_pos(-grid_square_size, -grid_square_size)
                 pygame.display.set_caption("Collided!! ")
         
+
+        
+        
         
     #--------------------------------------------------------------
 
     #pygame.draw.rect(screen, "dark green", single_box.rect, 100)
-    pygame.draw.circle(screen, "blue", single_dot.pos, 3, 1)
-    pygame.draw.circle(screen, "blue", moving_dot.pos, 3, 1)
+    pygame.draw.circle(screen, "blue", single_dot.shape, 7, 7)
+    pygame.draw.circle(screen, "red", moving_dot.shape, 7, 7)
     #for box in i_block.shape:
         #pygame.draw.circle(screen, "blue", box, 2)
+    draw_shape(i_block2)
 
     # Flip the display
     pygame.display.flip()
