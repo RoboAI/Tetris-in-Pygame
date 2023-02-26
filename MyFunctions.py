@@ -24,3 +24,4 @@ def get_distance(x1, y1, x2, y2):
 
 def get_distance_from_pts(p1, p2):
     return get_distance(p1[0], p1[1], p2[0], p2[1])
+    

@@ -1,9 +1,9 @@
 
 class Collision:
     collisions = {"left": 0,
-                "right": 180, 
-                "down": 90, 
-                "up": -90}
+                  "right": 180, 
+                  "down": 90, 
+                  "up": -90}
     
 
 

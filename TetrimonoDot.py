@@ -35,11 +35,12 @@ class TetriminoDot(Tetrimino):
         
         #if there is a gap of more than one-block, then there is no collision
         if(distance > collision_spacing):
-            return ([False, "all"])
+            return ([False, "none"])
 
-        # if objects are next to each other, then return 'True and direction of colliion'
+        # if objects are next to each other, then return 'True and direction of collision'
         if(col_direction, angle) in Collision.collisions.items():
             return ([True, col_direction]) 
 
         return ([False, "none"])
         
+    

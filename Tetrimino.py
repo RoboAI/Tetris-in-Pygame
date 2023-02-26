@@ -1,3 +1,5 @@
+from Wall import Wall
+from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
 class Tetrimino:
     def __init__(self):
@@ -29,6 +31,18 @@ class Tetrimino:
         else:
             return False
     
+    def check_collision_with_wall(self, wall, grid_spacing):
+        if(wall[0] == "left-wall"):
+            if(self.shape[0] - grid_spacing <= wall[1][0]):
+                return ([True, wall[0]])
+        elif(wall[0] == "right-wall"):
+            if(self.shape[0] + grid_spacing >= wall[1][0]):
+                return ([True, wall[0]])
+        elif(wall[0] == "bottom-wall"):
+            if(self.shape[1] + grid_spacing >= wall[1][1]):
+                return ([True, wall[0]])
+        return ([False, "none"])
+     
     # rotate
     def rotate(degrees: int):
         pass
