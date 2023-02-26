@@ -42,9 +42,11 @@ def get_next_random_shape():
     pass
 
 IBlock = [[0,0],[1,0],[2,0],[3,0],[4,0]]
-TBlock = [[0,0],[1,0],[2,0],[1,1],[1,2],[1,3]]
+TBlock = [[0,0],[1,0],[2,0],[1,1],[1,2]]
 LBlock = [[0,0],[0,1],[0,2],[0,3],[1,3]]
+JBlock = [[1,0],[1,1],[1,2],[1,3],[0,3]]
 ZBlock = [[0,0],[1,0],[1,1],[2,1]]
+SBlock = [[0,1],[1,1],[1,0],[2,0]]
 SQBlock = [[0,0],[1,0],[0,1],[1,1]]
 
 pygame.init()
@@ -114,7 +116,7 @@ moving_dot.moving = False
 I_block = TetriminoShape()
 I_block.set_shape(IBlock.copy())
 I_block.set_pos(grid_offset_x, grid_offset_y, grid_square_size)
-I_block.add_to_pos(grid_square_size * 6, grid_square_size * 7)
+I_block.add_to_pos(grid_square_size * 8, grid_square_size * 7)
 I_block.set_colour("dark red")
 #-----------------
 T_block = TetriminoShape()
@@ -124,7 +126,7 @@ T_block.add_to_pos(grid_square_size * 4, grid_square_size)
 T_block.set_colour("blue")
 #-----------------
 L_block = TetriminoShape()
-L_block.set_shape(LBlock.copy())
+L_block.set_shape(JBlock.copy())
 L_block.set_pos(grid_offset_x, grid_offset_y, grid_square_size)
 L_block.add_to_pos(grid_square_size * 2, grid_square_size * 7)
 L_block.set_colour("dark green")
@@ -141,6 +143,7 @@ SQ_block.set_pos(grid_offset_x, grid_offset_y, grid_square_size)
 SQ_block.add_to_pos(grid_square_size * 10, grid_square_size * 16)
 SQ_block.set_colour("cyan")
 #-----------------
+
 moving_dot = T_block
 game_shapes = [I_block, L_block, Z_block, SQ_block]
 
@@ -179,11 +182,10 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, str_wall) -> bool
     if(result[0] == True):
         return False
 
+    # check for collisions with other shapes
     result = check_if_shape_is_colliding(direction, shape)
     if(result[0] == True):
         return False
-        #if(result[2] == "wall" and result[1] == str_wall):
-            #return False
 
     # no collision is detected so make the move according to 'direction'
     if(direction == "left"):
