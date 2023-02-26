@@ -316,9 +316,14 @@ Z_block.set_pos(grid_offset_x, grid_offset_y)
 Z_block.add_to_pos(grid_square_size * 6, grid_square_size * 12)
 Z_block.set_colour("dark orange")
 #-----------------
+SQ_block = TetriminoShape()
+SQ_block.set_shape(SQBlock.copy())
+SQ_block.set_pos(grid_offset_x, grid_offset_y)
+SQ_block.add_to_pos(grid_square_size * 10, grid_square_size * 16)
+SQ_block.set_colour("brown")
+#-----------------
 moving_dot = T_block
-single_dot = I_block
-game_shapes = [I_block, L_block, Z_block]
+game_shapes = [I_block, L_block, Z_block, SQ_block]
 
 
 
