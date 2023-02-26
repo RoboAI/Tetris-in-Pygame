@@ -1,4 +1,6 @@
-#class not used
+#####
+#####class not used. can delete
+#####
 
 class TetriminoBlock(Tetrimino):
     def __init__(self):
