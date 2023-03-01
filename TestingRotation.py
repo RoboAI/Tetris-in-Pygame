@@ -29,7 +29,7 @@ def get_next_random_shape():
 I_block = TetriminoShape()
 I_block.set_shape(gb.IBlock.copy())
 I_block.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
-I_block.add_to_pos(gb.grid_square_size * 6, gb.grid_square_size * 8)
+I_block.add_to_pos(gb.grid_square_size * 6, gb.grid_square_size * 10)
 I_block.set_colour("dark red")
 #-----------------
 T_block = TetriminoShape()
@@ -39,7 +39,7 @@ T_block.add_to_pos(gb.grid_square_size * 4, gb.grid_square_size)
 T_block.set_colour("blue")
 #-----------------
 L_block = TetriminoShape()
-L_block.set_shape(gb.LBlock.copy())
+L_block.set_shape(gb.JBlock.copy())
 L_block.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
 L_block.add_to_pos(gb.grid_square_size * 2, gb.grid_square_size * 7)
 L_block.set_colour("dark green")
@@ -98,9 +98,8 @@ moving_dot.set_pos(gb.grid_offset_x, gb.grid_offset_y)
 moving_dot.add_to_pos(gb.grid_square_size, gb.grid_square_size)
 moving_dot.moving = False
 
-moving_dot = T_block
-game_shapes = [I_block, T_block, L_block, Z_block, SQ_block]
-game_shapes.remove(moving_dot)
+moving_dot = I_block
+game_shapes = [T_block, L_block, Z_block, SQ_block]
 
 
 #draws a single TetriminoShape
@@ -184,28 +183,13 @@ while running:
                 del moving_dot.blocks[0]
             
             elif event.key == pygame.K_1:
-                no_space_to_rotate = False
-                for shape in game_shapes:
-                    if moving_dot.check_rotation_collision(I_block.blocks[2].shape, 90, shape, gb.grid_block_distance):
-                        break
-                else:
-                    I_block.rotate(I_block.blocks[2].shape, 90)
+                I_block.rotate(I_block.blocks[2].shape, 90)
 
             elif event.key == pygame.K_2:
-                no_space_to_rotate = False
-                for shape in game_shapes:
-                    if moving_dot.check_rotation_collision(L_block.blocks[2].shape, 90, shape, gb.grid_block_distance):
-                        break
-                else:
-                    L_block.rotate(L_block.blocks[2].shape, 90)
+                Z_block.rotate(Z_block.blocks[1].shape, 90)
             
             elif event.key == pygame.K_3:
-                no_space_to_rotate = False
-                for shape in game_shapes:
-                    if moving_dot.check_rotation_collision(T_block.blocks[3].shape, 90, shape, gb.grid_block_distance):
-                        break
-                else:
-                    T_block.rotate(T_block.blocks[3].shape, 90)
+                T_block.rotate(T_block.blocks[3].shape, 90)
             
 
     # Fill the background

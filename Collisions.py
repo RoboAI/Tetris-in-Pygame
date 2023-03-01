@@ -4,9 +4,8 @@ class Collision:
                   "right": 180, 
                   "down": 90, 
                   "up": -90}
+
     
-
-
     #if(col_direction == "left"):
         #if(angle == 0):
             #return ([True, col_direction])

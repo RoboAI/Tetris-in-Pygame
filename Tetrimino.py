@@ -42,10 +42,6 @@ class Tetrimino:
             if(self.shape[1] + grid_spacing >= wall[1][1]):
                 return ([True, wall[0]])
         return ([False, "none"])
-     
-    # rotate
-    def rotate(degrees: int):
-        pass
 
     # object can draw itself
     def draw(self, pygame, screen):

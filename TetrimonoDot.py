@@ -1,6 +1,10 @@
+import math
 from Tetrimino import Tetrimino
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 from Collisions import Collision
+from Globals import Globals
+
+gb = Globals
 
 class TetriminoDot(Tetrimino):
     def __init__(self):
@@ -19,23 +23,22 @@ class TetriminoDot(Tetrimino):
     def add_to_pos(self, x: float, y: float):
         self.shape[0] += x
         self.shape[1] += y
-    
-    #not working
-    def rotate(self, degrees: int):
-        abc = grid_rect[0] + (grid_square_size / 2) + 1
-        for coords in self.shape:
-            new_x = (((coords[0] / grid_square_size) - abc) * math.cos(degrees)) - (((coords[1] / grid_square_size) - abc) * math.sin(degrees))
-            new_y = (((coords[1] / grid_square_size) - abc) * math.cos(degrees)) + (((coords[0] / grid_square_size) - abc) * math.sin(degrees))
-            coords[0] = new_x
-            coords[1] = new_y
+
+    def find_block(self, x: float, y: float) -> bool:
+        pass
 
     def get_bounds(self):
-        return [self.shape[0]-1, self.shape[1]-1, 1, 1]
-        
+        return ([self.shape[0]-1, self.shape[1]-1, 1, 1])
+    
+    # check if blocks are on top of each other
+    def check_exact_collision(self, colliding_object: Tetrimino) -> bool:
+        return (self.shape[0] - colliding_object.shape[0] == 0 and
+                self.shape[1] - colliding_object.shape[1] == 0)
+    
+    # check collision with other block, using 'direction'
     def check_collision(self, col_direction, colliding_object: Tetrimino, collision_spacing):
         # if somehow the shapes are on top of each other then just return 'collided all sides'
-        if(self.shape[0] - colliding_object.shape[0] == 0 and
-           self.shape[1] - colliding_object.shape[1] == 0):
+        if(self.check_exact_collision(colliding_object)):
             return ([True, "all"])
 
         # get and distance between the two objects
