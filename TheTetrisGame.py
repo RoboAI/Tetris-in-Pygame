@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from Tetrimino import Tetrimino
 from TetrimonoDot import TetriminoDot
 from TetrimonoShape import TetriminoShape
@@ -8,6 +9,12 @@ from Grid import Grid
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
 gb = Globals
+
+
+# get random shape
+def get_next_random_shape() -> TetriminoShape:
+    return gb.GameShapes[random.randint(0, len(gb.GameShapes))].copy()
+
 
 #-----------------
 
@@ -35,6 +42,11 @@ L_block.set_shape(gb.LBlock.copy())
 L_block.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
 L_block.add_to_pos(gb.grid_square_size * 2, gb.grid_square_size * 7)
 L_block.set_colour("dark green")
+L_block.blocks[0].colour = "green"
+L_block.blocks[1].colour = "yellow"
+L_block.blocks[2].colour = "blue"
+L_block.blocks[3].colour = "pink"
+L_block.blocks[4].colour = "violet"
 L_block.desc = "L_SHAPE"
 #-----------------
 Z_block = TetriminoShape()
@@ -85,16 +97,17 @@ grid_walls = [["left-wall", left_wall],
 
 moving_dot = TetriminoDot([0,0])
 moving_dot.set_pos(gb.grid_offset_x, gb.grid_offset_y)
-moving_dot.add_to_pos(gb.grid_square_size, gb.grid_square_size)
+#moving_dot.add_to_pos(gb.grid_square_size, gb.grid_square_size)
 moving_dot.moving = False
 
-moving_dot = L_block
+moving_dot = T_block
 game_shapes = [I_block, T_block, L_block, Z_block, SQ_block]
 game_shapes.remove(moving_dot)
 
-
-def get_next_random_shape():
-    pass
+single_layer = []
+all_layers = []
+all_layers.append(single_layer.copy())
+    
 
 # draws a single TetriminoShape
 def draw_shape(tetri_blocks: TetriminoShape):
@@ -148,6 +161,7 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, str_wall) -> bool
     # return 'success'
     return True
 
+
 # main loop
 while running:
 
@@ -177,28 +191,18 @@ while running:
                 del moving_dot.blocks[0]
             
             elif event.key == pygame.K_1:
-                no_space_to_rotate = False
-                for shape in game_shapes:
-                    if moving_dot.check_rotation_collision(I_block.blocks[2].shape, 90, shape, grid_walls, gb.grid_block_distance):
-                        break
-                else:
-                    I_block.rotate(I_block.blocks[2].shape, 90)
+                pass
 
             elif event.key == pygame.K_2:
-                no_space_to_rotate = False
-                for shape in game_shapes:
-                    if moving_dot.check_rotation_collision(L_block.blocks[2].shape, 90, shape, grid_walls, gb.grid_block_distance):
-                        break
-                else:
-                    L_block.rotate(L_block.blocks[2].shape, 90)
-            
-            elif event.key == pygame.K_3:
                 no_space_to_rotate = False
                 for shape in game_shapes:
                     if moving_dot.check_rotation_collision(T_block.blocks[3].shape, 90, shape, grid_walls, gb.grid_block_distance):
                         break
                 else:
                     T_block.rotate(T_block.blocks[3].shape, 90)
+            
+            elif event.key == pygame.K_3:
+                pass
             
 
     # Fill the background
@@ -218,19 +222,10 @@ while running:
         #pygame.display.set_caption(str(time_passed))
         time_passed = 0
 
-        #if moving_dot.moving == True:
-            # do a dummy move to check for collision
-            #moving_dot.add_to_pos(grid_square_size, grid_square_size)
-
-            # if colliding..
-            # if moving_dot.check_collision(single_dot, single_dot):
-                #stop object
-                #moving_dot.moving = False
-                # move the object back to its previous point
-                #moving_dot.add_to_pos(-grid_square_size, -grid_square_size)
-                #pygame.display.set_caption("Collided!! ")
-
-        #move_shape_by_one("down", moving_dot, grid_walls, "bottom-wall")        
+     #   if moving_dot.moving == True:
+      #      if(move_shape_by_one("down", moving_dot, grid_walls, "bottom-wall") == False):
+      #          pygame.display.set_caption("touch down")
+      #          moving_dot.moving = False        
         
     #--------------------------------------------------------------
 

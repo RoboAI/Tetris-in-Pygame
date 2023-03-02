@@ -41,7 +41,6 @@ class Tetrimino:
         elif(wall[0] == "bottom-wall"):
             if(self.shape[1] + grid_spacing >= wall[1][1]):
                 return ([True, wall[0]])
-            
         return ([False, "none"])
 
     # object can draw itself

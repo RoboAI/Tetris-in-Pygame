@@ -37,3 +37,11 @@ class Globals:
     ZBlock = [[0,0],[1,0],[1,1],[2,1]]
     SBlock = [[0,1],[1,1],[1,0],[2,0]]
     SQBlock = [[0,0],[1,0],[0,1],[1,1]]
+
+    GameShapes = [IBlock,
+                  TBlock,
+                  LBlock,
+                  JBlock,
+                  ZBlock,
+                  SBlock,
+                  SQBlock]

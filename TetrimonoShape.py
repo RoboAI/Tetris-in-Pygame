@@ -96,7 +96,7 @@ class TetriminoShape():
 
         # check if there is space to rotate
         result = self.check_exact_collision(other_shape)
-        result2 = self.check_wall_collision(walls, collision_spacing)
+        result2 = self.check_wall_collision(walls, 0)
 
         # rotate back to original orientation
         self.rotate(origin_xy, -degrees)
