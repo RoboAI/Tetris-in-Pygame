@@ -16,6 +16,10 @@ class TetriminoDot(Tetrimino):
         super().__init__()
         self.shape: float = [x, y]
 
+    def __init__(self, points: float):
+        super().__init__()
+        self.shape: float = points
+
     def set_pos(self, x: float, y: float):
         self.shape[0] = x
         self.shape[1] = y

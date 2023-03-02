@@ -12,10 +12,15 @@ class Grid:
     def draw_grid(self, game, screen):
         pass
 
+        # where the grid starts
         start_x = gb.grid_rect[0]
         start_y = gb.grid_rect[1]
+
+        # where it ends
         end_x = start_x + gb.grid_width
         end_y = start_y + gb.grid_height
+
+        # grid-cell spacing
         grid_spacing = gb.grid_square_size
 
         # draw horizontal lines
@@ -31,7 +36,3 @@ class Grid:
                             gb.grid_lines_colour, 
                             (start_x + (x * grid_spacing), start_y), 
                             (start_x + (x * grid_spacing), end_y), 1)
-            
-abc = ([False, "none"])
-print(type(abc))
-abx = [False, "none"]
