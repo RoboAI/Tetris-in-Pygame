@@ -2,6 +2,23 @@ from Tetrimino import Tetrimino
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
 class Globals:
+    def __init__(self):
+        self.IBlock = [[0,0],[1,0],[2,0],[3,0],[4,0]]
+        self.TBlock = [[0,0],[1,0],[2,0],[1,1],[1,2]]
+        self.LBlock = [[0,0],[0,1],[0,2],[0,3],[1,3]]
+        self.JBlock = [[1,0],[1,1],[1,2],[1,3],[0,3]]
+        self.ZBlock = [[0,0],[1,0],[1,1],[2,1]]
+        self.SBlock = [[0,1],[1,1],[1,0],[2,0]]
+        self.SQBlock = [[0,0],[1,0],[0,1],[1,1]]
+
+        self.GameShapes = [["I", self.IBlock],
+                        ["T", self.TBlock],
+                        ["L", self.LBlock],
+                        ["J", self.JBlock],
+                        ["Z", self.ZBlock],
+                        ["S", self.SBlock],
+                        ["SQ", self.SQBlock]]
+
     border_thickness = 1
 
     screen_width = 625
@@ -30,18 +47,3 @@ class Globals:
     # size of each Tetrimino block
     tetrimino_size = grid_square_size / 2 - 2
 
-    IBlock = [[0,0],[1,0],[2,0],[3,0],[4,0]]
-    TBlock = [[0,0],[1,0],[2,0],[1,1],[1,2]]
-    LBlock = [[0,0],[0,1],[0,2],[0,3],[1,3]]
-    JBlock = [[1,0],[1,1],[1,2],[1,3],[0,3]]
-    ZBlock = [[0,0],[1,0],[1,1],[2,1]]
-    SBlock = [[0,1],[1,1],[1,0],[2,0]]
-    SQBlock = [[0,0],[1,0],[0,1],[1,1]]
-
-    GameShapes = [IBlock,
-                  TBlock,
-                  LBlock,
-                  JBlock,
-                  ZBlock,
-                  SBlock,
-                  SQBlock]

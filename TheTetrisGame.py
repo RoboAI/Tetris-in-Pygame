@@ -8,12 +8,12 @@ from Globals import Globals
 from Grid import Grid
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
-gb = Globals
+gb = Globals()
 
 
 # get random shape
-def get_next_random_shape() -> TetriminoShape:
-    return gb.GameShapes[random.randint(0, len(gb.GameShapes))].copy()
+def get_next_random_shape():
+    return gb.GameShapes[random.randint(0, len(gb.GameShapes)-1)].copy()
 
 
 #-----------------
@@ -28,7 +28,7 @@ I_block.desc = "I_SHAPE"
 T_block = TetriminoShape()
 T_block.set_shape(gb.TBlock.copy())
 T_block.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
-T_block.add_to_pos(gb.grid_square_size * 4, gb.grid_square_size)
+T_block.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
 T_block.set_colour("blue")
 T_block.blocks[0].colour = "green"
 T_block.blocks[1].colour = "yellow"
@@ -95,19 +95,21 @@ grid_walls = [["left-wall", left_wall],
               ["bottom-wall", bottom_wall]]
 
 
-moving_dot = TetriminoDot([0,0])
+moving_dot = TetriminoDot(0,0)
 moving_dot.set_pos(gb.grid_offset_x, gb.grid_offset_y)
 #moving_dot.add_to_pos(gb.grid_square_size, gb.grid_square_size)
 moving_dot.moving = False
 
 moving_dot = T_block
-game_shapes = [I_block, T_block, L_block, Z_block, SQ_block]
-game_shapes.remove(moving_dot)
+game_shapes = []
+#game_shapes.remove(moving_dot)
 
 single_layer = []
 all_layers = []
 all_layers.append(single_layer.copy())
-    
+
+# increment when collided with 'down'. When twice, then block.moving == False
+touched_down_count = 1
 
 # draws a single TetriminoShape
 def draw_shape(tetri_blocks: TetriminoShape):
@@ -132,21 +134,34 @@ def check_if_shape_is_colliding(direction, shape: TetriminoShape):
 
         # if shape is colliding in that direction then don't do the move
         if(result[0] == True):
-            return ([result[0], result[1], "none"])
+            return result
     
-    return ([False, "none", "none"])
+    return ([False, "none"])
+
+
+def move_shape_right(shape: TetriminoShape, str_wall):
+    # check for wall collisions
+    result = check_wall_collision(shape, grid_walls, str_wall)
+    if(result[0] == True):
+        return False
+    
 
 # checks for collisions then moves a shape by one space
-def move_shape_by_one(direction, shape: TetriminoShape, walls, str_wall) -> bool:
+def move_shape_by_one(direction, shape: TetriminoShape, walls, str_wall):
+    
+    #TODO: if 'direction' != 'str_wall', then no point checking walls
     # check for wall collisions
     result = check_wall_collision(shape, walls, str_wall)
     if(result[0] == True):
-        return False
+        if(direction == "down"):
+            # TODO: find a better place to put this
+            shape.moving = False
+        return ([False, "bottom-wall"])
 
     # check for collisions with other shapes
     result = check_if_shape_is_colliding(direction, shape)
     if(result[0] == True):
-        return False
+        return ([False, result[1]])
 
     # no collision is detected so make the move according to 'direction'
     if(direction == "left"):
@@ -159,7 +174,43 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, str_wall) -> bool
         shape.add_to_pos(0, gb.grid_square_size)
     
     # return 'success'
-    return True
+    return ([True, "none"])
+
+def shape_touched_down(shape: TetriminoShape):
+    global moving_dot
+
+    shape.moving = False
+    
+    #temp = get_next_random_shape()
+    #moving_dot = TetriminoShape()
+    #moving_dot.set_shape(temp[1])
+    #moving_dot.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
+    #moving_dot.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
+    #moving_dot.desc = temp[0]
+
+    game_shapes.append(moving_dot)
+    moving_dot = TetriminoShape()
+    moving_dot.set_shape(gb.TBlock.copy())
+    moving_dot.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
+    moving_dot.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
+    moving_dot.set_colour("blue")
+    T_block.desc = "T_SHAPE"
+#pygame.display.set_caption(str(moving_dot.blocks[0]) + " " + moving_dot.blocks[0][1])
+   
+
+def move_shape_left_once(shape: TetriminoShape):
+    return move_shape_by_one("left", shape, grid_walls, "left-wall")
+
+def move_shape_right_once(shape: TetriminoShape):
+    return move_shape_by_one("right", shape, grid_walls, "right-wall")
+
+def move_shape_down_once(shape: TetriminoShape):
+    result = move_shape_by_one("down", shape, grid_walls, "bottom-wall")
+    if(result[0] == False):
+      shape_touched_down(shape)
+        
+
+
 
 
 # main loop
@@ -222,10 +273,8 @@ while running:
         #pygame.display.set_caption(str(time_passed))
         time_passed = 0
 
-     #   if moving_dot.moving == True:
-      #      if(move_shape_by_one("down", moving_dot, grid_walls, "bottom-wall") == False):
-      #          pygame.display.set_caption("touch down")
-      #          moving_dot.moving = False        
+        if moving_dot.moving == True:
+            move_shape_down_once(moving_dot)     
         
     #--------------------------------------------------------------
 

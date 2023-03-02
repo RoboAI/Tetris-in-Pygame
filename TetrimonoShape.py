@@ -15,7 +15,7 @@ class TetriminoShape():
     def set_shape(self, shape_points):
         self.blocks: TetriminoDot = []
         for single_block in shape_points:
-             self.blocks.append(TetriminoDot(single_block))
+             self.blocks.append(TetriminoDot(single_block[0], single_block[1]))
 
     #TODO: not useful as it sets all of the objects x,y to the same value (overlapping)
     def set_pos(self, x, y):
