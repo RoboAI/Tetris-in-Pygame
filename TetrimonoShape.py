@@ -11,6 +11,7 @@ class TetriminoShape():
         self.colour = "dark blue"
         self.moving = True
         self.desc = "none"
+        self.rotation_index: int = 0
     
     def set_shape(self, shape_points):
         self.blocks: TetriminoDot = []
@@ -18,13 +19,13 @@ class TetriminoShape():
              self.blocks.append(TetriminoDot(single_block[0], single_block[1]))
 
     #TODO: not useful as it sets all of the objects x,y to the same value (overlapping)
-    def set_pos(self, x, y):
+    def set_pos(self, x: float, y: float):
         for i in range(len(self.blocks)):
             self.blocks[i].shape[0] = x
             self.blocks[i].shape[1] = y
     
     # set position for all of the blocks, using thier previous offset
-    def set_pos(self, x, y, block_spacing):
+    def set_pos(self, x: float, y: float, block_spacing):
         for i in range(len(self.blocks)):
             self.blocks[i].shape[0] = (self.blocks[i].shape[0] * block_spacing) + x
             self.blocks[i].shape[1] = (self.blocks[i].shape[1] * block_spacing) + y
