@@ -11,13 +11,13 @@ class Globals:
         self.SBlock = [2, [[0,1],[1,1],[1,0],[2,0]]]
         self.SQBlock = [0, [[0,0],[1,0],[0,1],[1,1]]]
 
-        self.GameShapeColours = {"I": "orange",
-                        "T": "red",
+        self.GameShapeColours = {"I": "maroon",
+                        "T": "tomato",
                         "L": "yellow",
                         "J": "blue",
                         "Z": "green",
                         "S": "lightseagreen",
-                        "SQ": "brown"}
+                        "SQ": "silver"}
 
         self.GameShapes = {"I": self.IBlock,
                         "T": self.TBlock,
@@ -38,7 +38,7 @@ class Globals:
 
     infobox_next_shape_xy: float = [infobox_width / 3, infobox_height / 5]
 
-    infobox_score_xy: float = [infobox_width / 3 - 10, infobox_height - infobox_height / 3]
+    infobox_score_xy: float = [infobox_width / 3 - 10, infobox_height - infobox_height / 2.5]
 
     grid_num_of_squares = 20
     grid_width = screen_width - infobox_width

@@ -98,17 +98,26 @@ game_shapes = []
 #game_shapes.remove(moving_dot)
 #-----------------
 single_layer = {}
-all_layers = []
-all_layers.append(single_layer.copy())
+all_layers = {}
+for i in range(gb.grid_num_of_squares - 1, -1, -1):
+    single_layer = {i * gb.grid_square_size: []}
+    all_layers.update(single_layer)
+    #a = all_layers[gb.grid_num_of_squares - 1 - i]
+    #a.update({i * gb.grid_square_size: []})
+    
 #-----------------
+
+# current shape
 player_shape = get_next_random_shape()
 player_shape = setup_new_shape(player_shape)
 #-----------------
+
+# next shape
 player_next_shape = get_next_random_shape()
 player_next_shape = setup_next_shape(player_next_shape)
+#-----------------
 
-
-# increment when collided with 'down'. When twice, then block.moving == False
+# increment when collided with 'down'. When twice-> then block.moving == False
 touched_down_count = 1
 
 # draws a single TetriminoShape
@@ -118,6 +127,7 @@ def draw_shape(tetri_blocks: TetriminoShape):
         pygame.draw.circle(screen, block.colour, block.shape, gb.tetrimino_size, 100)
     
 
+#TODO: this may be a duplicate of TetriminoShape.check_wall_collision()
 def check_wall_collision(shape: Tetrimino, walls, str_wall):
     for block in shape.blocks:
         for single_wall in walls:
@@ -178,6 +188,7 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
     return ([True, "none"])
 
 
+# shape collided with bottom-wall
 def shape_touched_down(current_shape: TetriminoShape):
     global player_shape
     global player_next_shape
@@ -194,22 +205,31 @@ def shape_touched_down(current_shape: TetriminoShape):
     player_next_shape = setup_next_shape(player_next_shape)
 
     #pygame.display.set_caption(str(moving_dot.blocks[0]) + " " + moving_dot.blocks[0][1])
-    
 
+
+def check_and_remove_rows():
+    pass
+
+# move shape left one block
 def move_shape_left_once(shape: TetriminoShape):
     return move_shape_by_one("left", shape, grid_walls, "left-wall")
 
+# move shape right one block
 def move_shape_right_once(shape: TetriminoShape):
     return move_shape_by_one("right", shape, grid_walls, "right-wall")
 
+# move shape down one block
 def move_shape_down_once(shape: TetriminoShape):
     result = move_shape_by_one("down", shape, grid_walls, "bottom-wall")
     if(result[0] == False):
       shape_touched_down(shape)
 
+# move shape up one block
 def move_shape_up_once(shape: TetriminoShape):
     return move_shape_by_one("up", shape, grid_walls, "bottom-wall")
-        
+
+
+# rotate shape clockwise
 def rotate_shape_cw(shape: TetriminoShape, degrees):
     for shape in game_shapes:
         if player_shape.check_rotation_collision(player_shape.blocks[player_shape.rotation_index].shape, degrees, shape, grid_walls, gb.grid_block_distance):
@@ -282,7 +302,7 @@ while running:
     #--------------------------------------------------------------
     if time_passed >= shapes_tick_interval :
         pygame.display.set_caption("created new shape")
-        #pygame.display.set_caption(str(time_passed))
+
         time_passed = 0
 
         if player_shape.moving == True:
