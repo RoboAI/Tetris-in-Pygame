@@ -17,6 +17,16 @@ class TetriminoShape():
         self.blocks: TetriminoDot = []
         for single_block in shape_points:
              self.blocks.append(TetriminoDot(single_block[0], single_block[1]))
+    
+    def remove_block(self, block: TetriminoDot) -> bool:
+        for i in range(len(self.blocks)):
+            if( self.blocks[i] == block ):
+                try:
+                    self.blocks.remove(block)
+                    return True
+                except ValueError:
+                    return False
+        
 
     #TODO: not useful as it sets all of the objects x,y to the same value (overlapping)
     def set_pos(self, x: float, y: float):

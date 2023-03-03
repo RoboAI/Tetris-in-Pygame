@@ -99,12 +99,11 @@ game_shapes = []
 #-----------------
 single_layer = {}
 all_layers = {}
-for i in range(gb.grid_num_of_squares - 1, -1, -1):
-    single_layer = {i * gb.grid_square_size: []}
+for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
+    single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
     all_layers.update(single_layer)
     #a = all_layers[gb.grid_num_of_squares - 1 - i]
     #a.update({i * gb.grid_square_size: []})
-    
 #-----------------
 
 # current shape
@@ -138,6 +137,7 @@ def check_wall_collision(shape: Tetrimino, walls, str_wall):
     return ([False, "none"])
 
 
+# check collision with another shape
 def check_if_shape_is_colliding(direction, shape: TetriminoShape):
     # check 'shape's collision with all other shapes
     for single_shape in game_shapes:
@@ -193,12 +193,66 @@ def shape_touched_down(current_shape: TetriminoShape):
     global player_shape
     global player_next_shape
 
-    pygame.display.set_caption("touch down")
+    #pygame.display.set_caption("touch down")
 
     current_shape.moving = False
     
     game_shapes.append(player_shape)
 
+    #------
+    #check if landed-shape has gone beyond upper-wall, then its game-over
+
+    #---------------------------------------------------
+    for block in player_shape.blocks:
+        layer = all_layers.get(block.shape[1])
+        layer.append(block)
+        pass
+
+    countx = 0
+    layers_to_delete = []
+    # loop through all layers
+    for key in all_layers.keys():
+        layer = all_layers.get(key)
+        #if layer is full
+        if( len(layer) >= 17 ):
+            #loop through all blocks in layer
+            for block in layer:
+                #loop through shapes checking which this block belongs to
+                for shape in game_shapes:
+                    # try to remove from parent
+                    if( shape.remove_block(block) == True):
+                        countx += 1
+                        break
+            layer.clear()
+            layers_to_delete.append(key)
+    
+    if( (len(layers_to_delete)) > 0 ):
+        for del_layer in layers_to_delete:
+            all_layers.pop(del_layer)
+
+        keys = list(all_layers.keys())
+        keys.sort()
+        keys.reverse()
+
+        for key in keys:
+            temp = all_layers[key]
+            all_layers.pop(key)
+            all_layers.update({key + gb.grid_square_size * len(layers_to_delete): temp})
+        
+        keys = list(all_layers.keys())
+        keys.sort()
+        keys.reverse()
+
+
+        for i in range(gb.grid_num_of_vt_squares - len(keys) - 1, -1, -1):#TODO: +10 for extra above
+            single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
+            all_layers.update(single_layer)
+
+        for shape in game_shapes:
+            shape.add_to_pos(0, gb.grid_square_size * len(layers_to_delete))
+    #---------------------------------------------------
+    
+    #player_shape = get_new_shape_by_name("I")
     player_shape = get_new_shape_by_name(player_next_shape.desc)
 
     player_next_shape = get_next_random_shape()
@@ -230,7 +284,7 @@ def move_shape_up_once(shape: TetriminoShape):
 
 
 # rotate shape clockwise
-def rotate_shape_cw(shape: TetriminoShape, degrees):
+def rotate_shape_cw(shape: TetriminoShape, degrees):    
     for shape in game_shapes:
         if player_shape.check_rotation_collision(player_shape.blocks[player_shape.rotation_index].shape, degrees, shape, grid_walls, gb.grid_block_distance):
             break
@@ -301,7 +355,6 @@ while running:
 
     #--------------------------------------------------------------
     if time_passed >= shapes_tick_interval :
-        pygame.display.set_caption("created new shape")
 
         time_passed = 0
 

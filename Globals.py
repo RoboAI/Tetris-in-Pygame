@@ -40,13 +40,15 @@ class Globals:
 
     infobox_score_xy: float = [infobox_width / 3 - 10, infobox_height - infobox_height / 2.5]
 
-    grid_num_of_squares = 20
     grid_width = screen_width - infobox_width
     grid_height = screen_height
     grid_rect = [infobox_width, 0,
                 grid_width, grid_height]
+    
+    grid_num_of_vt_squares = 20
+    grid_num_of_hz_squares = 0 # calculated below
 
-    grid_square_size = grid_height / grid_num_of_squares
+    grid_square_size = grid_height / grid_num_of_vt_squares
     grid_block_distance = get_distance(0, 0, grid_square_size, grid_square_size)
     grid_offset_x = grid_rect[0] + (grid_square_size / 2) + 1
     grid_offset_y = grid_rect[1] + (grid_square_size / 2) + 1
@@ -55,8 +57,6 @@ class Globals:
     grid_bk_colour = (25,25,25)
 
     grid_cel_rect = [0, 0, grid_square_size, grid_square_size]
-
-
 
     # size of each Tetrimino block
     tetrimino_size = grid_square_size / 2 - 2
