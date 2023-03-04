@@ -215,12 +215,9 @@ def remove_layer_blocks_from_parents(layer: list):
 
 
 def get_completed_rows() -> list:
-    layers_to_delete = []
-    for key in all_layers.keys():
-        layer = all_layers.get(key)
-        # if layer is full, then it means row is full so remove it
-        if( len(layer) >= gb.grid_num_of_hz_squares ):
-            layers_to_delete.append(key)
+    # get the rows that contains more than 'gb.grid_num_of_hz_squares' blocks 
+    layers_to_delete = [i for i in all_layers.keys() 
+                         if len(all_layers.get(i)) >= gb.grid_num_of_hz_squares ]
     
     return layers_to_delete
 
@@ -236,6 +233,7 @@ def shift_layer_down(dict_layers, key, units) -> None:
         block.add_to_pos(0, (gb.grid_square_size * units))
 
 
+# TODO: not used
 def shift_layers_down_offset(dict_layers, keys: list, keys_offset: int):
     # loop to increment each key to the next value
     # save layer, pop it, modify key, then re-add
@@ -246,6 +244,7 @@ def shift_layers_down_offset(dict_layers, keys: list, keys_offset: int):
     for block in blocks:
         block.add_to_pos(0, (gb.grid_square_size))
 
+
 # shift entire layers down once
 def shift_layers_down_once(dict_layers) -> None:
     # get the keys in sorted-reversed order to start from the highest-key
@@ -253,8 +252,7 @@ def shift_layers_down_once(dict_layers) -> None:
     # if we dont start from highest, then increasing key from lowest to the next layer
     # would overlap keys and so dictionary lookup will be invalid (duplicates)
     keys = list(dict_layers.keys())
-    keys.sort()
-    keys.reverse()
+    keys.sort(reverse = True)
 
     # loop to increment each key to the next value
     # save layer, pop it, modify key, then re-add
@@ -262,6 +260,8 @@ def shift_layers_down_once(dict_layers) -> None:
         blocks = dict_layers[key]
         dict_layers.pop(key)
         dict_layers.update({key + gb.grid_square_size: blocks})
+    for block in blocks:
+        block.add_to_pos(0, (gb.grid_square_size))
 
 
 # create and re-add the popped layers
