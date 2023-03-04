@@ -188,22 +188,80 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
     return ([True, "none"])
 
 
+def remove_layers(dict_layers, layers) -> None:
+    for key in layers:
+        # get the TetriminoDots
+        blocks = dict_layers[key]
+
+        # remove the TetriminoDots from their parents for deletion
+        remove_layer_blocks_from_parents(blocks)
+
+        # remove references. TODO: check if needed
+        dict_layers[key].clear()
+
+        # remove from all_layers
+        dict_layers.pop(key)
+
+
+def remove_layer_blocks_from_parents(layer: list):
+    # this nested loop removes all the blocks in the layer from their parents.
+    # loop through all blocks in layer
+    for block in layer:
+        # loop through shapes checking which this block belongs to
+        for shape in game_shapes:
+            # try to remove from parent
+            if( shape.remove_block(block) == True):
+                break
+
+
+def get_completed_rows() -> list:
+    layers_to_delete = []
+    for key in all_layers.keys():
+        layer = all_layers.get(key)
+        # if layer is full, then it means row is full so remove it
+        if( len(layer) >= gb.grid_num_of_hz_squares ):
+            layers_to_delete.append(key)
+    
+    return layers_to_delete
+
+# shift layer down to required layer
+def shift_layer_down(dict_layers, key, units) -> None:
+    if(units <= 0):
+     return
+
+    blocks = dict_layers[key]
+    dict_layers.pop(key)
+    dict_layers.update({key + (gb.grid_square_size * units): blocks})
+    for block in blocks:
+        block.add_to_pos(0, (gb.grid_square_size * units))
+
+
+def shift_layers_down_offset(dict_layers, keys: list, keys_offset: int):
+    # loop to increment each key to the next value
+    # save layer, pop it, modify key, then re-add
+    for i in range(keys_offset, len(keys), 1):
+        blocks = dict_layers[keys[i]]
+        dict_layers.pop(keys[i])
+        dict_layers.update({keys[i] + gb.grid_square_size: blocks})
+    for block in blocks:
+        block.add_to_pos(0, (gb.grid_square_size))
+
 # shift entire layers down once
-def shift_layers_down_once(layers) -> None:
+def shift_layers_down_once(dict_layers) -> None:
     # get the keys in sorted-reversed order to start from the highest-key
     # highest-key is incremented first, then lower etc
     # if we dont start from highest, then increasing key from lowest to the next layer
     # would overlap keys and so dictionary lookup will be invalid (duplicates)
-    keys = list(layers.keys())
+    keys = list(dict_layers.keys())
     keys.sort()
     keys.reverse()
 
     # loop to increment each key to the next value
     # save layer, pop it, modify key, then re-add
     for key in keys:
-        blocks = layers[key]
-        layers.pop(key)
-        layers.update({key + gb.grid_square_size: blocks})
+        blocks = dict_layers[key]
+        dict_layers.pop(key)
+        dict_layers.update({key + gb.grid_square_size: blocks})
 
 
 # create and re-add the popped layers
@@ -211,9 +269,13 @@ def add_missing_layers() -> None:
         keys = list(all_layers.keys())
         keys.sort()
         keys.reverse()
+        counter_1 = 0
         for i in range(gb.grid_num_of_vt_squares - len(keys) - 1, -1, -1):#TODO: +10 for extra above
             single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
             all_layers.update(single_layer)
+            counter_1 += 1
+
+        print("added " + str(counter_1) + " layers")
 
 
 # shape collided with bottom-wall
@@ -223,7 +285,7 @@ def shape_touched_down(current_shape: TetriminoShape):
 
     #pygame.display.set_caption("touch down")
 
-    current_shape.moving = False
+    player_shape.moving = False
     
     game_shapes.append(player_shape)
 
@@ -237,43 +299,41 @@ def shape_touched_down(current_shape: TetriminoShape):
         layer = all_layers.get(block.shape[1])
         layer.append(block)
 
-    countx = 0
-    layers_to_delete = []
-    # loop through all layers
-    for key in all_layers.keys():
-        layer = all_layers.get(key)
-        # if layer is full, then it means row is full so remove it
-        if( len(layer) >= gb.grid_num_of_hz_squares ):
-            # loop through all blocks in layer
-            for block in layer:
-                # loop through shapes checking which this block belongs to
-                for shape in game_shapes:
-                    # try to remove from parent
-                    if( shape.remove_block(block) == True):
-                        countx += 1
-                        break
-            layer.clear()
-            layers_to_delete.append(key)
-    
-    if( (len(layers_to_delete)) > 0 ):
+    layers_to_delete = get_completed_rows()
+    layers_to_delete.sort(reverse = True)
 
-        for del_layer in layers_to_delete:
-            all_layers.pop(del_layer)
-            shift_layers_down_once(all_layers)
-    
+    if( len(layers_to_delete) > 0):
+        #store a copy of layers list to reconstruct after removing completed layers (rows)
+        keys = list(all_layers.keys())
+        keys.sort(reverse = True)
+        keys_copy = keys.copy()
+
+        # remove completed layers
+        remove_layers(layers_to_delete)
+
+        # get all_layers latest keys after removing some
+        adjusted_layer_keys = list(all_layers.keys())
+        adjusted_layer_keys.sort(reverse = True)
+        
+        # loop through layers pushing them down
+        for i in range(len(adjusted_layer_keys)):
+            # if reference-layer is > real layer, then push real-layer down
+            if(keys_copy[i] > adjusted_layer_keys[i]):
+                shift_layer_down(all_layers, adjusted_layer_keys[i],
+                                 (keys_copy[i] - adjusted_layer_keys[i]) / gb.grid_square_size)
+
+        # add the missing top layers
         add_missing_layers()
-
-        for shape in game_shapes:
-            shape.add_to_pos(0, gb.grid_square_size * len(layers_to_delete))
+        
     #---------------------------------------------------
     
     #player_shape = get_new_shape_by_name("I")
+
+    # switch current-shape to the displayed next-shape
     player_shape = get_new_shape_by_name(player_next_shape.desc)
 
-    player_next_shape = get_next_random_shape()
-    player_next_shape = setup_next_shape(player_next_shape)
-
-    #pygame.display.set_caption(str(moving_dot.blocks[0]) + " " + moving_dot.blocks[0][1])
+    # get new next shape
+    player_next_shape = setup_next_shape(get_next_random_shape())
 
 
 def check_and_remove_rows():
