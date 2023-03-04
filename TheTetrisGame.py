@@ -309,7 +309,7 @@ def shape_touched_down(current_shape: TetriminoShape):
         keys_copy = keys.copy()
 
         # remove completed layers
-        remove_layers(layers_to_delete)
+        remove_layers(all_layers, layers_to_delete)
 
         # get all_layers latest keys after removing some
         adjusted_layer_keys = list(all_layers.keys())
