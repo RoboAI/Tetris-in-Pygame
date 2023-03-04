@@ -188,6 +188,34 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
     return ([True, "none"])
 
 
+# shift entire layers down once
+def shift_layers_down_once(layers) -> None:
+    # get the keys in sorted-reversed order to start from the highest-key
+    # highest-key is incremented first, then lower etc
+    # if we dont start from highest, then increasing key from lowest to the next layer
+    # would overlap keys and so dictionary lookup will be invalid (duplicates)
+    keys = list(layers.keys())
+    keys.sort()
+    keys.reverse()
+
+    # loop to increment each key to the next value
+    # save layer, pop it, modify key, then re-add
+    for key in keys:
+        blocks = layers[key]
+        layers.pop(key)
+        layers.update({key + gb.grid_square_size: blocks})
+
+
+# create and re-add the popped layers
+def add_missing_layers() -> None:
+        keys = list(all_layers.keys())
+        keys.sort()
+        keys.reverse()
+        for i in range(gb.grid_num_of_vt_squares - len(keys) - 1, -1, -1):#TODO: +10 for extra above
+            single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
+            all_layers.update(single_layer)
+
+
 # shape collided with bottom-wall
 def shape_touched_down(current_shape: TetriminoShape):
     global player_shape
@@ -199,25 +227,26 @@ def shape_touched_down(current_shape: TetriminoShape):
     
     game_shapes.append(player_shape)
 
-    #------
-    #check if landed-shape has gone beyond upper-wall, then its game-over
+    #------------------------
+    # TODO: check if landed-shape has gone beyond upper-wall, then its game-over
+    #------------------------
 
     #---------------------------------------------------
+    # add current shape's blocks to the corresponding layers
     for block in player_shape.blocks:
         layer = all_layers.get(block.shape[1])
         layer.append(block)
-        pass
 
     countx = 0
     layers_to_delete = []
     # loop through all layers
     for key in all_layers.keys():
         layer = all_layers.get(key)
-        #if layer is full
-        if( len(layer) >= 17 ):
-            #loop through all blocks in layer
+        # if layer is full, then it means row is full so remove it
+        if( len(layer) >= gb.grid_num_of_hz_squares ):
+            # loop through all blocks in layer
             for block in layer:
-                #loop through shapes checking which this block belongs to
+                # loop through shapes checking which this block belongs to
                 for shape in game_shapes:
                     # try to remove from parent
                     if( shape.remove_block(block) == True):
@@ -227,26 +256,13 @@ def shape_touched_down(current_shape: TetriminoShape):
             layers_to_delete.append(key)
     
     if( (len(layers_to_delete)) > 0 ):
+
         for del_layer in layers_to_delete:
             all_layers.pop(del_layer)
 
-        keys = list(all_layers.keys())
-        keys.sort()
-        keys.reverse()
-
-        for key in keys:
-            temp = all_layers[key]
-            all_layers.pop(key)
-            all_layers.update({key + gb.grid_square_size * len(layers_to_delete): temp})
-        
-        keys = list(all_layers.keys())
-        keys.sort()
-        keys.reverse()
-
-
-        for i in range(gb.grid_num_of_vt_squares - len(keys) - 1, -1, -1):#TODO: +10 for extra above
-            single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
-            all_layers.update(single_layer)
+        shift_layers_down_once(all_layers)
+    
+        add_missing_layers()
 
         for shape in game_shapes:
             shape.add_to_pos(0, gb.grid_square_size * len(layers_to_delete))

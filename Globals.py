@@ -45,8 +45,8 @@ class Globals:
     grid_rect = [infobox_width, 0,
                 grid_width, grid_height]
     
-    grid_num_of_vt_squares = 20
-    grid_num_of_hz_squares = 0 # calculated below
+    grid_num_of_vt_squares: int = 20
+    grid_num_of_hz_squares: int = grid_width / (grid_height / grid_num_of_vt_squares)
 
     grid_square_size = grid_height / grid_num_of_vt_squares
     grid_block_distance = get_distance(0, 0, grid_square_size, grid_square_size)
