@@ -259,8 +259,7 @@ def shape_touched_down(current_shape: TetriminoShape):
 
         for del_layer in layers_to_delete:
             all_layers.pop(del_layer)
-
-        shift_layers_down_once(all_layers)
+            shift_layers_down_once(all_layers)
     
         add_missing_layers()
 
