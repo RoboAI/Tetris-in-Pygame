@@ -53,6 +53,7 @@ def get_new_shape_by_name(shape_name) -> TetriminoShape:
     found_item = gb.GameShapes.get(shape_name)
     return setup_new_shape([shape_name, found_item])
 
+    
 
 #setup grid
 grid = Grid()
@@ -150,13 +151,6 @@ def check_if_shape_is_colliding(direction, shape: TetriminoShape):
     
     return ([False, "none"])
 
-
-def move_shape_right(shape: TetriminoShape, str_wall):
-    # check for wall collisions
-    result = check_wall_collision(shape, grid_walls, str_wall)
-    if(result[0] == True):
-        return False
-    
 
 # checks for collisions then moves a shape by one space
 def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
@@ -285,28 +279,33 @@ def shape_touched_down(current_shape: TetriminoShape):
 
     #pygame.display.set_caption("touch down")
 
+    # make it stop moving
     player_shape.moving = False
     
+    # player not controlling now so add it to list to be drawn with others
     game_shapes.append(player_shape)
 
     #------------------------
     # TODO: check if landed-shape has gone beyond upper-wall, then its game-over
     #------------------------
 
-    #---------------------------------------------------
+    #-------------------------------------------------------
     # add current shape's blocks to the corresponding layers
     for block in player_shape.blocks:
         layer = all_layers.get(block.shape[1])
         layer.append(block)
+    #-------------------------------------------------------
 
+    # get rows that have been filled
     layers_to_delete = get_completed_rows()
     layers_to_delete.sort(reverse = True)
 
+    # if rows are complete then remove and push others down
     if( len(layers_to_delete) > 0):
+        #----------------------------------------------------
         #store a copy of layers list to reconstruct after removing completed layers (rows)
         keys = list(all_layers.keys())
         keys.sort(reverse = True)
-        keys_copy = keys.copy()
 
         # remove completed layers
         remove_layers(all_layers, layers_to_delete)
@@ -317,17 +316,15 @@ def shape_touched_down(current_shape: TetriminoShape):
         
         # loop through layers pushing them down
         for i in range(len(adjusted_layer_keys)):
-            # if reference-layer is > real layer, then push real-layer down
-            if(keys_copy[i] > adjusted_layer_keys[i]):
+            # if reference-layer (keys[i]) is below real-layer (adjusted_layer_keys[i]),
+            # then push real-layer down to match it
+            if(keys[i] > adjusted_layer_keys[i]):
                 shift_layer_down(all_layers, adjusted_layer_keys[i],
-                                 (keys_copy[i] - adjusted_layer_keys[i]) / gb.grid_square_size)
+                                 (keys[i] - adjusted_layer_keys[i]) / gb.grid_square_size)
 
         # add the missing top layers
         add_missing_layers()
-        
-    #---------------------------------------------------
-    
-    #player_shape = get_new_shape_by_name("I")
+        #---------------------------------------------------
 
     # switch current-shape to the displayed next-shape
     player_shape = get_new_shape_by_name(player_next_shape.desc)
@@ -336,8 +333,6 @@ def shape_touched_down(current_shape: TetriminoShape):
     player_next_shape = setup_next_shape(get_next_random_shape())
 
 
-def check_and_remove_rows():
-    pass
 
 # move shape left one block
 def move_shape_left_once(shape: TetriminoShape):
@@ -357,16 +352,30 @@ def move_shape_down_once(shape: TetriminoShape):
 def move_shape_up_once(shape: TetriminoShape):
     return move_shape_by_one("up", shape, grid_walls, "bottom-wall")
 
-
-# rotate shape clockwise
-def rotate_shape_cw(shape: TetriminoShape, degrees):    
+# rotate shape clockwise if possible
+def rotate_shape_cw(shape: TetriminoShape, degrees = 90):    
     for shape in game_shapes:
         if player_shape.check_rotation_collision(player_shape.blocks[player_shape.rotation_index].shape, degrees, shape, grid_walls, gb.grid_block_distance):
             break
     else:
         player_shape.rotate(player_shape.blocks[player_shape.rotation_index].shape, 90)
 
+#------------------------------------------
+class InputProcessor:
+    def __init__(self) -> None:
+        self.delegates = {pygame.K_LEFT: move_shape_left_once,
+                          pygame.K_UP: move_shape_up_once,
+                          pygame.K_RIGHT: move_shape_right_once,
+                          pygame.K_DOWN: move_shape_down_once,
+                          pygame.K_r: rotate_shape_cw}
+    
+    def get_delegate(self, key_pressed):
+        return self.delegates.get(key_pressed, None)
+#-------------------------------------------
 
+
+#-------------------------------------------
+input_processor = InputProcessor()
 counter = 0
 
 # main loop
@@ -380,31 +389,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # TODO: change grid_walls to dictionary
+        # check for key-down
         elif event.type == pygame.KEYDOWN:
-            if(event.key == pygame.K_LEFT):
-                move_shape_left_once(player_shape)
-                    
-            elif event.key == pygame.K_RIGHT:
-                move_shape_right_once(player_shape)
-                
-            elif event.key == pygame.K_DOWN:
-                move_shape_down_once(player_shape)
-
-            elif event.key == pygame.K_UP:
-                move_shape_up_once(player_shape)
-
-            elif event.key == pygame.K_a:
-                del player_shape.blocks[0]
             
-            elif event.key == pygame.K_1:
-                pass
+            # if game is not over
+            if(gb.game_over == False):
 
-            elif event.key == pygame.K_2:
-                rotate_shape_cw(player_shape, 90)
-            
-            elif event.key == pygame.K_3:
-                pass
+                # get functoin delegate and call it
+                fn = input_processor.get_delegate(event.key)
+                if( fn != None ):
+                    fn(player_shape)
             
 
     # Fill the background
@@ -434,7 +428,7 @@ while running:
         time_passed = 0
 
         if player_shape.moving == True:
-            move_shape_down_once(player_shape)     
+            move_shape_down_once(player_shape)
         
     #--------------------------------------------------------------
 

@@ -26,6 +26,10 @@ class Globals:
                         "Z": self.ZBlock,
                         "S": self.SBlock,
                         "SQ": self.SQBlock}
+        
+    game_over = False
+    layers_cleared = 0
+    player_score = 0
 
     border_thickness = 1
 
