@@ -108,8 +108,13 @@ for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
 #-----------------
 
 # current shape
-player_shape = get_next_random_shape()
-player_shape = setup_new_shape(player_shape)
+player_shape = get_new_shape_by_name("I")
+#player_shape = get_next_random_shape()
+#player_shape = setup_new_shape(player_shape)
+player_shape.blocks[0].colour = "blue"
+player_shape.blocks[1].colour = "green"
+player_shape.blocks[2].colour = "red"
+player_shape.blocks[3].colour = "yellow"
 #-----------------
 
 # next shape
@@ -346,18 +351,24 @@ def move_shape_right_once(shape: TetriminoShape):
 def move_shape_down_once(shape: TetriminoShape):
     result = move_shape_by_one("down", shape, grid_walls, "bottom-wall")
     if(result[0] == False):
-      shape_touched_down(shape)
+        shape_touched_down(shape)
 
 # move shape up one block
 def move_shape_up_once(shape: TetriminoShape):
     return move_shape_by_one("up", shape, grid_walls, "bottom-wall")
 
 # rotate shape clockwise if possible
-def rotate_shape_cw(shape: TetriminoShape, degrees = 90):    
-    for shape in game_shapes:
-        if player_shape.check_rotation_collision(player_shape.blocks[player_shape.rotation_index].shape, degrees, shape, grid_walls, gb.grid_block_distance):
+def rotate_shape_cw(shape: TetriminoShape, degrees = 90):
+    # return if rotation would collide with a wall
+    if shape.check_rotation_collision(shape.blocks[shape.rotation_index].shape, degrees, None, grid_walls, gb.grid_block_distance):
+        return
+    
+    # return if rotation would collide with other shapes
+    for landed_shape in game_shapes:
+        if shape.check_rotation_collision(landed_shape.blocks[landed_shape.rotation_index].shape, degrees, landed_shape, None, gb.grid_block_distance):
             break
-    else:
+    
+    else:# have enough space so do the rotation
         player_shape.rotate(player_shape.blocks[player_shape.rotation_index].shape, 90)
 
 #------------------------------------------
