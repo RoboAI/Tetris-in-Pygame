@@ -27,9 +27,15 @@ class Globals:
                         "S": self.SBlock,
                         "SQ": self.SQBlock}
         
+    titles_font_colour = "navajowhite"
+    scores_font_colour = "orange"
+    game_over_font_colour = "firebrick"
+        
     game_over = False
     layers_cleared = 0
     player_score = 0
+    row_cleared_points = 3
+    multi_row_bonus = 5
 
     border_thickness = 1
 
@@ -42,7 +48,12 @@ class Globals:
 
     infobox_next_shape_xy: float = [infobox_width / 3, infobox_height / 5]
 
-    infobox_score_xy: float = [infobox_width / 3 - 10, infobox_height - infobox_height / 2.5]
+    infobox_text_offset = [infobox_width / 3 - 10, infobox_height - infobox_height / 2.5 - 20]
+    infobox_title_score_xy: float = [infobox_text_offset[0], infobox_text_offset[1]]
+    infobox_player_score_xy: float = [infobox_text_offset[0] + 20, infobox_text_offset[1] + 40]
+    infobox_layer_title_xy: float = [infobox_text_offset[0] - 10, infobox_text_offset[1] + 100]
+    infobox_layer_score_xy: float = [infobox_text_offset[0] + 20,  infobox_text_offset[1] + 140]
+
 
     grid_width = screen_width - infobox_width
     grid_height = screen_height
@@ -61,6 +72,9 @@ class Globals:
     grid_bk_colour = (25,25,25)
 
     grid_cel_rect = [0, 0, grid_square_size, grid_square_size]
+
+    game_over_xy: float = [grid_width / 2 + infobox_width - 130,
+                           grid_height / 2 - 20]
 
     # size of each Tetrimino block
     tetrimino_size = grid_square_size / 2 - 2
