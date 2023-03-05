@@ -96,25 +96,23 @@ grid_walls = [["left-wall", left_wall],
 
 #-----------------
 game_shapes = []
-#game_shapes.remove(moving_dot)
 #-----------------
-single_layer = {}
+
+# grid layers. stores the blocks in layers.
 all_layers = {}
 for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
-    single_layer = {i * gb.grid_square_size + gb.grid_offset_y: []}
-    all_layers.update(single_layer)
-    #a = all_layers[gb.grid_num_of_squares - 1 - i]
-    #a.update({i * gb.grid_square_size: []})
+    all_layers.update({i * gb.grid_square_size + gb.grid_offset_y: []})
 #-----------------
 
 # current shape
-player_shape = get_new_shape_by_name("I")
-#player_shape = get_next_random_shape()
-#player_shape = setup_new_shape(player_shape)
-player_shape.blocks[0].colour = "blue"
-player_shape.blocks[1].colour = "green"
-player_shape.blocks[2].colour = "red"
-player_shape.blocks[3].colour = "yellow"
+player_shape = get_next_random_shape()
+player_shape = setup_new_shape(player_shape)
+#---------------
+# player_shape = get_new_shape_by_name("I")
+# player_shape.blocks[0].colour = "blue"
+# player_shape.blocks[1].colour = "green"
+# player_shape.blocks[2].colour = "red"
+# player_shape.blocks[3].colour = "yellow"
 #-----------------
 
 # next shape
@@ -365,7 +363,7 @@ def rotate_shape_cw(shape: TetriminoShape, degrees = 90):
     
     # return if rotation would collide with other shapes
     for landed_shape in game_shapes:
-        if shape.check_rotation_collision(landed_shape.blocks[landed_shape.rotation_index].shape, degrees, landed_shape, None, gb.grid_block_distance):
+        if shape.check_rotation_collision(shape.blocks[shape.rotation_index].shape, degrees, landed_shape, None, gb.grid_block_distance):
             break
     
     else:# have enough space so do the rotation

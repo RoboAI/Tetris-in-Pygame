@@ -107,7 +107,7 @@ class TetriminoShape():
 
         # check if there is space to rotate
         result = False
-        result = False
+        result2 = False
 
         if( other_shape != None ):
             result = self.check_exact_collision(other_shape)
