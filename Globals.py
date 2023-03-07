@@ -1,6 +1,33 @@
 from Tetrimino import Tetrimino
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
+#--------------------------
+# TODO: remove these after finished
+matrix = [[[j for j in range(5)] for i in range(4)] for x in range(2)]
+print(matrix)
+
+stocks = ['reliance', 'infosys', 'tcs']
+prices = [2175, 1127, 2750]
+mylist = [[2,2],[3,3],[4,4]]
+mylist2 = [[1,1],[1,1],[-1,-1]]
+mylist3 = [1,2,3,4,5]
+mylist4 = [1]
+a = zip(mylist3, mylist4)
+print(set(a))
+a = zip(stocks, prices)
+print(set(a))
+mylist3 = [1,2,3,4,5]
+mylist4 = [1,4,5]
+mylist1 = [[2,2],[3,3],[4,4],[5,5]]
+mylist2 = [[3,3],[4,4]]
+list1 = [i for i in mylist1 if i not in mylist2]
+print(str(list1))
+print(mylist4)
+print(mylist1)
+print(type(mylist4))
+print(type(mylist1))
+#--------------------------
+
 class Globals:
     def __init__(self):
         self.IBlock = [2, [[0,0],[1,0],[2,0],[3,0]]]
@@ -11,13 +38,13 @@ class Globals:
         self.SBlock = [2, [[0,1],[1,1],[1,0],[2,0]]]
         self.SQBlock = [0, [[0,0],[1,0],[0,1],[1,1]]]
 
-        self.GameShapeColours = {"I": "maroon",
-                        "T": "tomato",
+        self.GameShapeColours = {"I": "orange",
+                        "T": "yellow",
                         "L": "yellow",
                         "J": "blue",
                         "Z": "green",
-                        "S": "lightseagreen",
-                        "SQ": "silver"}
+                        "S": "purple",
+                        "SQ": "light-blue"}
 
         self.GameShapes = {"I": self.IBlock,
                         "T": self.TBlock,
@@ -27,9 +54,14 @@ class Globals:
                         "S": self.SBlock,
                         "SQ": self.SQBlock}
         
+    game_main_font = "Comic Sans MS"
+    game_main_font_size = 30
     titles_font_colour = "navajowhite"
     scores_font_colour = "orange"
     game_over_font_colour = "firebrick"
+    bounding_box_colour = "dimgray"
+    top_pts_colour = "papayawhip"
+    top_pts_size = 2
         
     game_over = False
     layers_cleared = 0
@@ -79,3 +111,21 @@ class Globals:
     # size of each Tetrimino block
     tetrimino_size = grid_square_size / 2 - 2
 
+    # to stop typing it in
+    grid_square_size_half = grid_square_size / 2
+
+
+
+        # rc = pygame.Rect(block.shape[0], block.shape[1], gb.grid_square_size_half, gb.grid_square_size_half)
+        # rc.move_ip(-gb.grid_square_size_half/2, -gb.grid_square_size_half/2)
+        # rc.inflate_ip(gb.grid_square_size_half/2, gb.grid_square_size_half/2)
+        # pygame.draw.rect(screen, block.colour, rc, 3)
+
+        
+        # self.GameShapeColours = {"I": "maroon",
+        #                 "T": "tomato",
+        #                 "L": "yellow",
+        #                 "J": "blue",
+        #                 "Z": "green",
+        #                 "S": "lightseagreen",
+        #                 "SQ": "silver"}

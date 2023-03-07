@@ -12,6 +12,7 @@ class TetriminoShape():
         self.moving = True
         self.desc = "none"
         self.rotation_index: int = 0
+        self.box = None # list
     
     def set_shape(self, shape_points):
         self.blocks: TetriminoDot = []
@@ -121,3 +122,98 @@ class TetriminoShape():
         # return result: 'True' = collided so not rotatable
         #                'False' = not collided so can rotate
         return result | result2
+    
+
+    def get_bounding_box(self):
+        # get all blocks coords into one list (2D)
+        a = [[j for j in i.shape] for i in self.blocks]
+
+        # sort list based on [0] (x-value coord)
+        # gets left x
+        a.sort(key = lambda x: x[0])
+        x1 = a[0][0] - gb.grid_square_size_half
+
+        # sort list based on [0] (x-value coord)
+        # gets top y
+        a.sort(key = lambda x: x[0], reverse = True)
+        x2 = a[0][0] + gb.grid_square_size_half
+
+        # sort list based on [1] (y-value coord)
+        # gets right x
+        a.sort(key = lambda x: x[1])
+        y1 = a[0][1] - gb.grid_square_size_half
+
+        # sort list based on [0] (x-value coord)
+        # gets bottom y
+        a.sort(key = lambda x: x[1], reverse = True)
+        y2 = a[0][1] + gb.grid_square_size_half
+
+        # convert to coords and bounding-box
+        return [x1,y1,x2-x1,y2-y1]
+    
+
+    # does the same job as above. Leaving it for reference purposes
+    def get_bounding_box2(self):
+        if(len(self.blocks) <= 2):
+           return None
+        
+        x1 = self.blocks[0].shape[0]
+        y1 = self.blocks[0].shape[1] 
+        x2 = 0
+        y2 = 0
+
+        for i in range(0, len(self.blocks), 1):
+            if(self.blocks[i].shape[0] < x1):
+                x1 = self.blocks[i].shape[0]
+            elif(self.blocks[i].shape[0] > x2):
+                x2 = self.blocks[i].shape[0]
+            if(self.blocks[i].shape[1] < y1):
+                y1 = self.blocks[i].shape[1]
+            elif(self.blocks[i].shape[1] > y2):
+                y2 = self.blocks[i].shape[1]
+        
+        x1 -= gb.grid_square_size_half
+        x2 += gb.grid_square_size_half
+        y1 -= gb.grid_square_size_half
+        y2 += gb.grid_square_size_half
+
+        return [x1,y1,x2-x1,y2-y1]
+
+    # gets the top most blocks in the shape
+    def get_points_on_top(self):
+        # get blocks into a 2D array
+        a = [i.shape for i in self.blocks]
+
+        # ignore - same as above
+        #a = [[j for j in i.shape] for i in self.blocks]
+        
+        # sort by x-axis
+        a.sort(key = lambda x: x[0])
+        found_points = []
+        while(len(a) > 0):
+            # filter by most-left-only (can be more than one)
+            b = [[j for j in i] for i in a if i[0] == a[0][0]] #a[0][i] must match above x[i]!!
+            
+            # now sort by y-axis to find the top most point
+            b.sort(key = lambda x: x[1])
+
+            # if there are any points in list
+            if(len(b) > 0):
+                # add point to found-points  
+                found_points.append(b[0])
+
+                # remove newly found points from original list
+                a = [i for i in a if i not in b]
+            
+            else:# if nothing is left then just return
+                break
+        
+        # move points to the top of the block
+        for pts in found_points:
+            pts[1] -= gb.grid_square_size_half
+            
+        return found_points
+    
+    def update_bounding_box(self):
+        self.box = self.get_bounding_box()
+        return self.box

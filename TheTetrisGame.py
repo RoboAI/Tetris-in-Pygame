@@ -7,7 +7,8 @@ from TetrimonoShape import TetriminoShape
 from Globals import Globals
 from Grid import Grid
 from Wall import Wall
-from MyFunctions import get_angle, get_distance, get_distance_from_pts
+from ShapeImages import ShapeImages
+from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
 
 gb = Globals()
 
@@ -29,7 +30,7 @@ def setup_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
     new_shape.set_shape(game_shape[1][1])
     new_shape.rotation_index = game_shape[1][0]
     new_shape.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
-    new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -1)
+    new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
     new_shape.set_colour(get_shape_colour(new_shape.desc))
     return new_shape
 
@@ -70,20 +71,23 @@ pygame.init()
 # Set up the drawing window
 screen = pygame.display.set_mode([gb.screen_width, gb.screen_height])
 
+# window title
+pygame.display.set_caption("Honest Game Studios")
+
 # font setup
 pygame.font.init()
 
-layer_title_font = pygame.font.SysFont('Comic Sans MS', 30)
+layer_title_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
+score_title_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
 layer_title_surface = layer_title_font.render('Layers', True, gb.titles_font_colour)
-score_title_font = pygame.font.SysFont('Comic Sans MS', 30)
 score_title_surface = score_title_font.render('Score', True, gb.titles_font_colour)
 # score font
-player_score_font = pygame.font.SysFont('Comic Sans MS', 35)
+player_score_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
+layer_score_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
 player_score_surface = player_score_font.render('0', True, gb.scores_font_colour)
-layer_score_font = pygame.font.SysFont('Comic Sans MS', 35)
 layer_score_surface = layer_score_font.render('0', True, gb.scores_font_colour)
 # game over font
-game_over_font = pygame.font.SysFont('Comic Sans MS', 50)
+game_over_font = pygame.font.SysFont(gb.game_main_font, 50)
 game_over_surface = game_over_font.render('Game Over', True, gb.game_over_font_colour)
 #---------------------
 
@@ -118,10 +122,10 @@ for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
 player_shape = get_next_random_shape()
 player_shape = setup_new_shape(player_shape)
 #---------------
-# player_shape = get_new_shape_by_name("I")
+# player_shape = get_new_shape_by_name("S")
 # player_shape.blocks[0].colour = "blue"
 # player_shape.blocks[1].colour = "green"
-# player_shape.blocks[2].colour = "red"
+# player_shape.blocks[2].colour = "orange"
 # player_shape.blocks[3].colour = "yellow"
 #-----------------
 
@@ -130,15 +134,35 @@ player_next_shape = get_next_random_shape()
 player_next_shape = setup_next_shape(player_next_shape)
 #-----------------
 
+# shape markers
+bounding_box = None
+top_pts = None # markers for shape's top-coords
+draw_bounding_box = False
+#-----------------
+
 # increment when collided with 'down'. When twice-> then block.moving == False
 touched_down_count = 1
 # ----------------
+
+
+#--------------------------
+images = ShapeImages(pygame)
+rc = pygame.Rect(0, 0, 27, 27)
+images.add_image("blue", "images/blue2.png", rc)
+images.add_image("green", "images/green2.png", rc)
+images.add_image("yellow", "images/yellow2.png", rc)
+images.add_image("orange", "images/orange2.png", rc)
+images.add_image("purple", "images/purple2.png", rc)
+images.add_image("light-blue", "images/light-blue2.png", rc)
+#---------------------------
 
 # draws a single TetriminoShape
 def draw_shape(tetri_blocks: TetriminoShape):
     # loop trough all blocks drawing each
     for block in tetri_blocks.blocks:
-        pygame.draw.circle(screen, block.colour, block.shape, gb.tetrimino_size, 100)
+        dict_img = (images.sprites[block.colour])
+        rc = dict_img[0].move(block.shape[0]-gb.grid_square_size_half, block.shape[1]-gb.grid_square_size_half)
+        screen.blit(dict_img[1], rc)
     
 
 #TODO: this may be a duplicate of TetriminoShape.check_wall_collision()
@@ -190,6 +214,9 @@ def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
         shape.add_to_pos(0, -gb.grid_square_size)
     elif(direction == "down"):
         shape.add_to_pos(0, gb.grid_square_size)
+
+    update_bounding_box(shape)
+    update_top_points(shape)
     
     # return 'success'
     return ([True, "none"])
@@ -252,6 +279,7 @@ def shift_layers_down_offset(dict_layers, keys: list, keys_offset: int):
         block.add_to_pos(0, (gb.grid_square_size))
 
 
+# TODO: not used
 # shift entire layers down once
 def shift_layers_down_once(dict_layers) -> None:
     # get the keys in sorted-reversed order to start from the highest-key
@@ -328,6 +356,7 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
     #-------------------------------------------------------
     # add current shape's blocks to the corresponding layers
     for block in player_shape.blocks:
+        # find layer by using the 'y' value as key
         layer = all_layers.get(block.shape[1])
         layer.append(block)
     #-------------------------------------------------------
@@ -372,8 +401,41 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
     # get new next shape
     player_next_shape = setup_next_shape(get_next_random_shape())
 
+    # TODO: take this somewhere else
+    # update bounding box and top-points
+    update_bounding_box(player_shape)
+    update_top_points(player_shape)
+
     return scores_updated
 
+
+# calculates the points where the moving shape is dropping
+def find_shapepoints_at_bottom(grid_layers, moving_shape: TetriminoShape) -> TetriminoShape:
+    if(len(game_shapes) <= 0):
+        return
+
+    # TODO: doesnt detect bottom-wall
+    found_points = []
+    for blocks in moving_shape.blocks:
+        for row_key in grid_layers.keys():
+            for cell in grid_layers.get(row_key):
+                if(blocks.shape[0] == cell.shape[0]):
+                    found_points.append(cell)
+    
+    found_points = get_points_on_top(found_points, -gb.grid_square_size_half)
+    return found_points
+
+# updates the top_pts
+def update_top_points(moving_shape: TetriminoShape):
+    global top_pts
+
+    top_pts = find_shapepoints_at_bottom(all_layers, moving_shape)
+
+# updates the bounding-box
+def update_bounding_box(moving_shape: TetriminoShape):
+    global bounding_box
+
+    bounding_box = moving_shape.update_bounding_box()
 
 
 # move shape left one block
@@ -408,7 +470,20 @@ def rotate_shape_cw(shape: TetriminoShape, degrees = 90):
             break
     
     else:# have enough space so do the rotation
-        player_shape.rotate(player_shape.blocks[player_shape.rotation_index].shape, 90)
+        shape.rotate(shape.blocks[shape.rotation_index].shape, 90)
+        
+        # update bouding-box and top-points
+        update_bounding_box(shape)
+        update_top_points(shape)
+
+def increase_move_speed(shape: TetriminoShape):
+    global shapes_tick_interval
+    shapes_tick_interval = 40
+
+def decrease_move_speed(shape: TetriminoShape):
+    global shapes_tick_interval
+    shapes_tick_interval = 750
+
 #------------------------------------------
 
 
@@ -419,7 +494,8 @@ class InputProcessor:
                           pygame.K_RIGHT: move_shape_right_once,
                           pygame.K_DOWN: move_shape_down_once,
                           pygame.K_r: rotate_shape_cw,
-                          pygame.K_SPACE: rotate_shape_cw}
+                          pygame.K_SPACE: rotate_shape_cw,
+                          pygame.K_RETURN: increase_move_speed}
     
     def get_delegate(self, key_pressed):
         return self.delegates.get(key_pressed, None)
@@ -429,6 +505,7 @@ class InputProcessor:
 #-------------------------------------------
 input_processor = InputProcessor()
 counter = 0
+
 
 # main loop
 while running:
@@ -451,7 +528,9 @@ while running:
                 fn = input_processor.get_delegate(event.key)
                 if( fn != None ):
                     fn(player_shape)
-            
+
+        elif event.type == pygame.KEYUP:
+            decrease_move_speed(player_shape)
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
@@ -480,7 +559,6 @@ while running:
                     update_scores_texts(gb.player_score, gb.layers_cleared)
                 elif(gb.game_over == True):
                     display_gameover()
-        
     #--------------------------------------------------------------
 
     # draw texts
@@ -495,6 +573,15 @@ while running:
     # draw the rest of the shapes
     for game_shape in game_shapes:
         draw_shape(game_shape)
+    
+    # draw bounding box
+    if(draw_bounding_box != False and bounding_box != None):
+        pygame.draw.rect(screen, gb.bounding_box_colour, bounding_box, 1)
+    
+    # draw top points
+    if( top_pts != None):
+        for points in top_pts:
+            pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
 
     # draw game-over last
     if( gb.game_over == True ):
