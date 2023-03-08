@@ -39,17 +39,15 @@ class Globals:
         self.SBlock = [2, [[0,1],[1,1],[1,0],[2,0]]]
         self.SQBlock = [0, [[0,0],[1,0],[0,1],[1,1]]]
 
-        self.GameShapeColours = {
-                        "I": "orange",
+        self.GameShapeColours = {"I": "orange",
                         "T": "red",
                         "L": "yellow",
-                        "J": "brown",
+                        "J": "blue",
                         "Z": "green",
                         "S": "purple",
                         "SQ": "light-blue"}
 
-        self.GameShapes = {
-                        "I": self.IBlock,
+        self.GameShapes = {"I": self.IBlock,
                         "T": self.TBlock,
                         "L": self.LBlock,
                         "J": self.JBlock,
@@ -69,7 +67,6 @@ class Globals:
     game_over = False
     layers_cleared = 0
     player_score = 0
-    player_level = 0 #not used
     row_cleared_points = 3
     multi_row_bonus = 5
 

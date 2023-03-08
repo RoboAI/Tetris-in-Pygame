@@ -7,6 +7,7 @@ from TetrimonoShape import TetriminoShape
 from Globals import Globals
 from Grid import Grid
 from Wall import Wall
+from SplashScreen import SplashScreen
 from ShapeImages import ShapeImages
 from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
 
@@ -148,12 +149,20 @@ touched_down_count = 1
 #--------------------------
 images = ShapeImages(pygame)
 rc = pygame.Rect(0, 0, 27, 27)
-images.add_image("blue", "images/blue2.png", rc)
-images.add_image("green", "images/green2.png", rc)
-images.add_image("yellow", "images/yellow2.png", rc)
-images.add_image("orange", "images/orange2.png", rc)
-images.add_image("purple", "images/purple2.png", rc)
-images.add_image("light-blue", "images/light-blue2.png", rc)
+images.add_image("brown", "images/brown-low.png", rc)
+images.add_image("green", "images/green-low.png", rc)
+images.add_image("yellow", "images/yellow-low.png", rc)
+images.add_image("orange", "images/orange-low.png", rc)
+images.add_image("purple", "images/purple-low.png", rc)
+images.add_image("light-blue", "images/light-blue-low.png", rc)
+images.add_image("red", "images/red-low.png", rc)
+#---------------------------
+
+
+splash_anim = SplashScreen(pygame, screen)
+#---------------------------
+
+temp_rows_cleared_counter = 0
 #---------------------------
 
 # draws a single TetriminoShape
@@ -311,10 +320,28 @@ def add_missing_layers() -> None:
             counter_1 += 1
 
 
+# TODO: effect dies away because ENTER-UP resets shapes_tick_interval
+# update player speed
+def update_player_speed():
+    global shapes_tick_interval
+
+    if(shapes_tick_interval - 200 >= 200):
+        shapes_tick_interval = shapes_tick_interval - 200
+
+
 # update scores
 def update_player_scores(num_rows_cleared) -> None:
+    global temp_rows_cleared_counter
+
     gb.player_score += (gb.row_cleared_points * num_rows_cleared) + (gb.multi_row_bonus * (num_rows_cleared - 1))
     gb.layers_cleared += num_rows_cleared
+    gb.player_level = gb.layers_cleared % 5
+    temp_rows_cleared_counter += num_rows_cleared
+
+    if(gb.layers_cleared < 50 and temp_rows_cleared_counter >= 1):
+        temp_rows_cleared_counter = 0
+        update_player_speed()
+
 
 # update scores texs
 def update_scores_texts(score, rows_score):
@@ -324,10 +351,13 @@ def update_scores_texts(score, rows_score):
     player_score_surface = player_score_font.render(str(score), True, gb.scores_font_colour)
     layer_score_surface = layer_score_font.render(str(rows_score), True, gb.scores_font_colour)
 
+
+# TODO: move displaying-GameOver stuff here
 def display_gameover():
     pass
 
-# TODO: parameter isn't used
+# TODO: parameter isn't used. Also separate this function into sub-functions
+# TODO: maybe it'll be better if this returned layers_to_delete
 # shape collided with bottom-wall
 def shape_touched_down(current_shape: TetriminoShape) -> bool:
     global player_shape
@@ -476,10 +506,12 @@ def rotate_shape_cw(shape: TetriminoShape, degrees = 90):
         update_bounding_box(shape)
         update_top_points(shape)
 
+# increases the shapes down-movement speed
 def increase_move_speed(shape: TetriminoShape):
     global shapes_tick_interval
     shapes_tick_interval = 40
 
+# slows down the shapes down-movement speed
 def decrease_move_speed(shape: TetriminoShape):
     global shapes_tick_interval
     shapes_tick_interval = 750
@@ -506,7 +538,6 @@ class InputProcessor:
 input_processor = InputProcessor()
 counter = 0
 
-
 # main loop
 while running:
 
@@ -530,7 +561,8 @@ while running:
                     fn(player_shape)
 
         elif event.type == pygame.KEYUP:
-            decrease_move_speed(player_shape)
+            if(event.key == pygame.K_RETURN):
+                decrease_move_speed(player_shape)
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
