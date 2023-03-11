@@ -26,6 +26,13 @@ print(mylist4)
 print(mylist1)
 print(type(mylist4))
 print(type(mylist1))
+print("----------------------------------")
+print("----------------------------------")
+print("----------------------------------")
+a = 5
+b = a
+b = 10
+print(a)
 
 #--------------------------
 
@@ -56,7 +63,10 @@ class Globals:
                         "Z": self.ZBlock,
                         "S": self.SBlock,
                         "SQ": self.SQBlock}
-        
+    
+    game_title = "Honest Game Studios"
+    player_score_title = "Score"
+    layers_score_title = "Layers"
     game_main_font = "Comic Sans MS"
     game_main_font_size = 30
     titles_font_colour = "navajowhite"
@@ -64,7 +74,7 @@ class Globals:
     game_over_font_colour = "firebrick"
     bounding_box_colour = "dimgray"
     top_pts_colour = "papayawhip"
-    top_pts_size = 2
+    top_pts_size = 3
         
     game_over = False
     layers_cleared = 0
@@ -72,6 +82,7 @@ class Globals:
     player_level = 0 #not used
     row_cleared_points = 3
     multi_row_bonus = 5
+    game_speed_increment = 100
 
     border_thickness = 1
 
@@ -85,7 +96,7 @@ class Globals:
     infobox_next_shape_xy: float = [infobox_width / 3, infobox_height / 5]
 
     infobox_text_offset = [infobox_width / 3 - 10, infobox_height - infobox_height / 2.5 - 20]
-    infobox_title_score_xy: float = [infobox_text_offset[0], infobox_text_offset[1]]
+    infobox_score_title_xy: float = [infobox_text_offset[0], infobox_text_offset[1]]
     infobox_player_score_xy: float = [infobox_text_offset[0] + 30, infobox_text_offset[1] + 50]
     infobox_layer_title_xy: float = [infobox_text_offset[0] - 10, infobox_text_offset[1] + 110]
     infobox_layer_score_xy: float = [infobox_text_offset[0] + 30,  infobox_text_offset[1] + 160]

@@ -484,7 +484,7 @@ while running:
     #--------------------------------------------------------------
 
     # draw texts
-    screen.blit(score_title_surface, gb.infobox_title_score_xy)
+    screen.blit(score_title_surface, gb.infobox_score_title_xy)
     screen.blit(player_score_surface, gb.infobox_player_score_xy)
     screen.blit(layer_title_surface, gb.infobox_layer_title_xy)
     screen.blit(layer_score_surface, gb.infobox_layer_score_xy)

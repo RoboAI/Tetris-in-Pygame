@@ -9,7 +9,10 @@ from Grid import Grid
 from Wall import Wall
 from SplashScreen import SplashScreen
 from ShapeImages import ShapeImages
+from ScoreBoard import ScoreBoard
+from SoundManager import SoundManager
 from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
+
 
 gb = Globals()
 
@@ -55,38 +58,59 @@ def get_new_shape_by_name(shape_name) -> TetriminoShape:
     found_item = gb.GameShapes.get(shape_name)
     return setup_new_shape([shape_name, found_item])
 
-    
+
+# start main theme
+sound_manager = SoundManager()
+sound_manager.play_main_theme()
+#---------------------
 
 #setup grid
 grid = Grid()
+#---------------------
 
 # time calculator for shapes movement interval
-shapes_tick_interval = 750 # in milliseconds; move shape every xxx milliseconds
+class AutoDownMoveInterval:
+    def __init__(self, interval: int, min_interval: int) -> None:
+        self.interval = interval # in milliseconds; move shape every xxx milliseconds
+        self.min = min_interval
+        self.set_interval(interval)
+    
+    def set_interval(self, interval):
+        if(interval < self.min):
+            self.interval = self.min
+        else:
+            self.interval = interval
+
+auto_move_interval = AutoDownMoveInterval(750, 50) # original value/normal speed
+auto_move_interval_fast = AutoDownMoveInterval(50, 50) # temporarily used to speed-up/slow-down the game
+auto_move_interval_actual = auto_move_interval # actual value used to apply to the game. switches between the two
+#---------------------
 
 #used to calculate time between frames to control gameplay
 time_passed = 0
+#---------------------
 
 #init pygame
 pygame.init()
+#---------------------
 
 # Set up the drawing window
 screen = pygame.display.set_mode([gb.screen_width, gb.screen_height])
+#---------------------
 
 # window title
-pygame.display.set_caption("Honest Game Studios")
+pygame.display.set_caption(gb.game_title)
+#---------------------
 
 # font setup
 pygame.font.init()
+#---------------------
 
-layer_title_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
-score_title_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
-layer_title_surface = layer_title_font.render('Layers', True, gb.titles_font_colour)
-score_title_surface = score_title_font.render('Score', True, gb.titles_font_colour)
-# score font
-player_score_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
-layer_score_font = pygame.font.SysFont(gb.game_main_font, gb.game_main_font_size)
-player_score_surface = player_score_font.render('0', True, gb.scores_font_colour)
-layer_score_surface = layer_score_font.render('0', True, gb.scores_font_colour)
+# score board
+score_board = ScoreBoard(pygame)
+score_board.init_fonts(gb.titles_font_colour, gb.scores_font_colour, gb.layers_score_title, gb.player_score_title)
+#---------------------
+
 # game over font
 game_over_font = pygame.font.SysFont(gb.game_main_font, 50)
 game_over_surface = game_over_font.render('Game Over', True, gb.game_over_font_colour)
@@ -94,10 +118,11 @@ game_over_surface = game_over_font.render('Game Over', True, gb.game_over_font_c
 
 # Get the Clock to limit frame-rate
 clock = pygame.time.Clock()
+#---------------------
 
 # Run until the user asks to quit
 running = True
-#----------------
+#---------------------
 
 # TODO: change grid_walls to dictionary
 left_wall = [gb.grid_actual_rect[0], gb.grid_actual_rect[1]]
@@ -106,47 +131,47 @@ bottom_wall = [0, gb.grid_actual_rect[3]]
 grid_walls = [["left-wall", left_wall], 
               ["right-wall", right_wall], 
               ["bottom-wall", bottom_wall]]
-#-----------------
+#---------------------
 
 
-#-----------------
+#---------------------
 game_shapes = []
-#-----------------
+#---------------------
 
 # grid layers. stores the blocks in layers.
 all_layers = {}
 for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
     all_layers.update({i * gb.grid_square_size + gb.grid_offset_y: []})
-#-----------------
+#---------------------
 
 # current shape
 player_shape = get_next_random_shape()
 player_shape = setup_new_shape(player_shape)
-#---------------
+#---------------------
 # player_shape = get_new_shape_by_name("S")
 # player_shape.blocks[0].colour = "blue"
 # player_shape.blocks[1].colour = "green"
 # player_shape.blocks[2].colour = "orange"
 # player_shape.blocks[3].colour = "yellow"
-#-----------------
+#---------------------
 
 # next shape
 player_next_shape = get_next_random_shape()
 player_next_shape = setup_next_shape(player_next_shape)
-#-----------------
+#---------------------
 
 # shape markers
 bounding_box = None
 top_pts = None # markers for shape's top-coords
 draw_bounding_box = False
-#-----------------
+#---------------------
 
 # increment when collided with 'down'. When twice-> then block.moving == False
 touched_down_count = 1
-# ----------------
+#---------------------
 
 
-#--------------------------
+#---------------------
 images = ShapeImages(pygame)
 rc = pygame.Rect(0, 0, 27, 27)
 images.add_image("brown", "images/brown-low.png", rc)
@@ -156,14 +181,14 @@ images.add_image("orange", "images/orange-low.png", rc)
 images.add_image("purple", "images/purple-low.png", rc)
 images.add_image("light-blue", "images/light-blue-low.png", rc)
 images.add_image("red", "images/red-low.png", rc)
-#---------------------------
+#---------------------
 
 
 splash_anim = SplashScreen(pygame, screen)
-#---------------------------
+#---------------------
 
 temp_rows_cleared_counter = 0
-#---------------------------
+#---------------------
 
 # draws a single TetriminoShape
 def draw_shape(tetri_blocks: TetriminoShape):
@@ -320,15 +345,6 @@ def add_missing_layers() -> None:
             counter_1 += 1
 
 
-# TODO: effect dies away because ENTER-UP resets shapes_tick_interval
-# update player speed
-def update_player_speed():
-    global shapes_tick_interval
-
-    if(shapes_tick_interval - 200 >= 200):
-        shapes_tick_interval = shapes_tick_interval - 200
-
-
 # update scores
 def update_player_scores(num_rows_cleared) -> None:
     global temp_rows_cleared_counter
@@ -340,24 +356,22 @@ def update_player_scores(num_rows_cleared) -> None:
 
     if(gb.layers_cleared < 50 and temp_rows_cleared_counter >= 1):
         temp_rows_cleared_counter = 0
-        update_player_speed()
+        increase_move_speed_by(player_shape, gb.game_speed_increment)
 
 
 # update scores texs
 def update_scores_texts(score, rows_score):
-    global player_score_surface
-    global layer_score_surface
-
-    player_score_surface = player_score_font.render(str(score), True, gb.scores_font_colour)
-    layer_score_surface = layer_score_font.render(str(rows_score), True, gb.scores_font_colour)
+    score_board.update_player_score(score)
+    score_board.update_layers_score(rows_score)
 
 
 # TODO: move displaying-GameOver stuff here
 def display_gameover():
     pass
 
-# TODO: parameter isn't used. Also separate this function into sub-functions
-# TODO: maybe it'll be better if this returned layers_to_delete
+
+# TODO: parameter current_shape isn't used. Also separate this function into sub-functions
+# TODO: maybe it'll be better if this returned layers_to_delete.
 # shape collided with bottom-wall
 def shape_touched_down(current_shape: TetriminoShape) -> bool:
     global player_shape
@@ -506,31 +520,61 @@ def rotate_shape_cw(shape: TetriminoShape, degrees = 90):
         update_bounding_box(shape)
         update_top_points(shape)
 
-# increases the shapes down-movement speed
-def increase_move_speed(shape: TetriminoShape):
-    global shapes_tick_interval
-    shapes_tick_interval = 40
 
-# slows down the shapes down-movement speed
-def decrease_move_speed(shape: TetriminoShape):
-    global shapes_tick_interval
-    shapes_tick_interval = 750
+# increases speed to max
+def set_speed_max(shape: TetriminoShape):   
+    global auto_move_interval
+    global auto_move_interval_actual
+    global auto_move_interval_fast
+
+    auto_move_interval_actual = auto_move_interval_fast
+
+
+# increases speed to max
+def set_speed_to_normal(shape: TetriminoShape):   
+    global auto_move_interval
+    global auto_move_interval_actual
+    global auto_move_interval_fast
+
+    auto_move_interval_actual = auto_move_interval
+
+
+# increases the overall game speed
+def increase_move_speed_by(shape: TetriminoShape, speed: int):
+    global auto_move_interval
+    global auto_move_interval_actual
+    global auto_move_interval_fast
+
+    auto_move_interval.set_interval(auto_move_interval.interval - speed)
+    auto_move_interval_fast.set_interval(auto_move_interval_fast.interval - speed)
+
+
+# slows down the overall game speed
+def decrease_move_speed_by(shape: TetriminoShape, speed: int):
+    global auto_move_interval
+    global auto_move_interval_actual
+    global auto_move_interval_fast
+
+    #auto_move_interval_temp.set_interval(auto_move_interval.interval)
+    auto_move_interval.set_interval(auto_move_interval.interval + speed)
+    auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
 #------------------------------------------
 
 
 class InputProcessor:
     def __init__(self) -> None:
-        self.delegates = {pygame.K_LEFT: move_shape_left_once,
-                          pygame.K_UP: move_shape_up_once,
-                          pygame.K_RIGHT: move_shape_right_once,
-                          pygame.K_DOWN: move_shape_down_once,
-                          pygame.K_r: rotate_shape_cw,
-                          pygame.K_SPACE: rotate_shape_cw,
-                          pygame.K_RETURN: increase_move_speed}
+        self.key_down_delegates = {
+                          pygame.K_LEFT:    move_shape_left_once,
+                          pygame.K_UP:      move_shape_up_once,
+                          pygame.K_RIGHT:   move_shape_right_once,
+                          pygame.K_DOWN:    move_shape_down_once,
+                          pygame.K_r:       rotate_shape_cw,
+                          pygame.K_SPACE:   rotate_shape_cw,
+                          pygame.K_RETURN:  set_speed_max}
     
     def get_delegate(self, key_pressed):
-        return self.delegates.get(key_pressed, None)
+        return self.key_down_delegates.get(key_pressed, None)
 #-------------------------------------------
 
 
@@ -544,6 +588,8 @@ while running:
     # set frame-rate and store time-elapsed since last frame
     time_passed += clock.tick(60)
 
+    pygame.display.set_caption(str(auto_move_interval_actual.interval))
+
     # Did the user click the window close button?
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -555,14 +601,15 @@ while running:
             # if game is not over
             if(gb.game_over == False):
 
-                # get functoin delegate and call it
+                # get function delegate and call it
                 fn = input_processor.get_delegate(event.key)
                 if( fn != None ):
                     fn(player_shape)
 
-        elif event.type == pygame.KEYUP:
+        # TODO: not finished. Do same as key-down
+        elif event.type == pygame.KEYUP:  
             if(event.key == pygame.K_RETURN):
-                decrease_move_speed(player_shape)
+                set_speed_to_normal(player_shape)
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
@@ -581,7 +628,7 @@ while running:
 
     #--------------------------------------------------------------
     if(gb.game_over == False):
-        if time_passed >= shapes_tick_interval :
+        if( time_passed >= auto_move_interval_actual.interval ):
 
             time_passed = 0
 
@@ -594,10 +641,7 @@ while running:
     #--------------------------------------------------------------
 
     # draw texts
-    screen.blit(score_title_surface, gb.infobox_title_score_xy)
-    screen.blit(player_score_surface, gb.infobox_player_score_xy)
-    screen.blit(layer_title_surface, gb.infobox_layer_title_xy)
-    screen.blit(layer_score_surface, gb.infobox_layer_score_xy)
+    score_board.draw_texts(screen)
 
     # draw the moving one
     draw_shape(player_shape)

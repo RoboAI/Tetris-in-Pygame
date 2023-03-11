@@ -13,7 +13,6 @@ class SplashScreen:
         self.frame_counter = 0
         self.frame_delay_counter = 0
         self.text_frame_counter = 0
-        self.frame_delay = 0
         self.frame_delays = 0
         self.font = "Comic Sans MS"
         self.surface: pygame.Surface
