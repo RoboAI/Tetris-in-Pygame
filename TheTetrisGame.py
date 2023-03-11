@@ -11,6 +11,7 @@ from SplashScreen import SplashScreen
 from ShapeImages import ShapeImages
 from ScoreBoard import ScoreBoard
 from SoundManager import SoundManager
+from AutoDownMoveInterval import AutoDownMoveInterval
 from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
 
 
@@ -68,19 +69,7 @@ sound_manager.play_main_theme()
 grid = Grid()
 #---------------------
 
-# time calculator for shapes movement interval
-class AutoDownMoveInterval:
-    def __init__(self, interval: int, min_interval: int) -> None:
-        self.interval = interval # in milliseconds; move shape every xxx milliseconds
-        self.min = min_interval
-        self.set_interval(interval)
-    
-    def set_interval(self, interval):
-        if(interval < self.min):
-            self.interval = self.min
-        else:
-            self.interval = interval
-
+# these control the speed of the moving shape
 auto_move_interval = AutoDownMoveInterval(750, 50) # original value/normal speed
 auto_move_interval_fast = AutoDownMoveInterval(50, 50) # temporarily used to speed-up/slow-down the game
 auto_move_interval_actual = auto_move_interval # actual value used to apply to the game. switches between the two
@@ -227,7 +216,6 @@ def check_if_shape_is_colliding(direction, shape: TetriminoShape):
 # checks for collisions then moves a shape by one space
 def move_shape_by_one(direction, shape: TetriminoShape, walls, wall_desc):
     
-    #TODO: if 'direction' != 'str_wall', then no point checking walls
     # check for wall collisions
     result = check_wall_collision(shape, walls, wall_desc)
     if result[0] == True:
@@ -359,12 +347,6 @@ def update_player_scores(num_rows_cleared) -> None:
         increase_move_speed_by(player_shape, gb.game_speed_increment)
 
 
-# update scores texs
-def update_scores_texts(score, rows_score):
-    score_board.update_player_score(score)
-    score_board.update_layers_score(rows_score)
-
-
 # TODO: move displaying-GameOver stuff here
 def display_gameover():
     pass
@@ -455,18 +437,31 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
 
 # calculates the points where the moving shape is dropping
 def find_shapepoints_at_bottom(grid_layers, moving_shape: TetriminoShape) -> TetriminoShape:
-    if(len(game_shapes) <= 0):
-        return
-
-    # TODO: doesnt detect bottom-wall
-    found_points = []
-    for blocks in moving_shape.blocks:
-        for row_key in grid_layers.keys():
-            for cell in grid_layers.get(row_key):
-                if(blocks.shape[0] == cell.shape[0]):
-                    found_points.append(cell)
     
+    # list to store found points
+    found_points = []   
+
+    # if there are shapes landed..
+    if(len(game_shapes) > 0):
+
+        # then loop through all shapes seeing if there are any below/above it
+        for blocks in moving_shape.blocks:
+            for row_key in grid_layers.keys():
+                for cell in grid_layers.get(row_key):
+                    if(blocks.shape[0] == cell.shape[0]):
+                        # if found then add it to found_points
+                        found_points.append(cell.shape)
+    
+    # (an easy way) add the bottom wall's corresponding-edge-points to the list
+    # if there are any blocks on it, then these points will be filtered out anyway, 
+    #  else bottom-wall is empty
+    for blocks in moving_shape.blocks:
+        found_points.append([blocks.shape[0], gb.grid_height + gb.grid_square_size_half])
+
+    # send the points and get which ones are on top
     found_points = get_points_on_top(found_points, -gb.grid_square_size_half)
+
+    # return what is found
     return found_points
 
 # updates the top_pts
@@ -565,16 +560,22 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
 class InputProcessor:
     def __init__(self) -> None:
         self.key_down_delegates = {
-                          pygame.K_LEFT:    move_shape_left_once,
-                          pygame.K_UP:      move_shape_up_once,
-                          pygame.K_RIGHT:   move_shape_right_once,
-                          pygame.K_DOWN:    move_shape_down_once,
-                          pygame.K_r:       rotate_shape_cw,
-                          pygame.K_SPACE:   rotate_shape_cw,
-                          pygame.K_RETURN:  set_speed_max}
+            pygame.K_LEFT:    move_shape_left_once,
+            pygame.K_UP:      move_shape_up_once,
+            pygame.K_RIGHT:   move_shape_right_once,
+            pygame.K_DOWN:    move_shape_down_once,
+            pygame.K_r:       rotate_shape_cw,
+            pygame.K_SPACE:   rotate_shape_cw,
+            pygame.K_RETURN:  set_speed_max}
+        
+        self.key_up_delegates = {
+            pygame.K_RETURN:  set_speed_to_normal}
     
-    def get_delegate(self, key_pressed):
+    def get_delegate_keydown(self, key_pressed):
         return self.key_down_delegates.get(key_pressed, None)
+    
+    def get_delegate_keyup(self, key_released):
+        return self.key_up_delegates.get(key_released, None)
 #-------------------------------------------
 
 
@@ -595,21 +596,26 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # check for key-down
-        elif event.type == pygame.KEYDOWN:
-            
-            # if game is not over
-            if(gb.game_over == False):
+        # if game is not over
+        elif(gb.game_over == False):
 
+            # check for key-down
+            if event.type == pygame.KEYDOWN:
+       
                 # get function delegate and call it
-                fn = input_processor.get_delegate(event.key)
+                fn = input_processor.get_delegate_keydown(event.key)
                 if( fn != None ):
                     fn(player_shape)
 
-        # TODO: not finished. Do same as key-down
-        elif event.type == pygame.KEYUP:  
-            if(event.key == pygame.K_RETURN):
-                set_speed_to_normal(player_shape)
+
+            # check for key-up
+            elif event.type == pygame.KEYUP:
+
+                # get function delegate and call it
+                fn = input_processor.get_delegate_keyup(event.key)
+                if( fn != None ):
+                    fn(player_shape)
+
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
@@ -635,9 +641,7 @@ while running:
             if player_shape.moving == True:
                 result = move_shape_down_once(player_shape)
                 if( result == True ):
-                    update_scores_texts(gb.player_score, gb.layers_cleared)
-                elif(gb.game_over == True):
-                    display_gameover()
+                    score_board.update_scores_texts(gb.player_score, gb.layers_cleared)
     #--------------------------------------------------------------
 
     # draw texts
@@ -658,8 +662,11 @@ while running:
     if( top_pts != None):
         for points in top_pts:
             pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
+            # pygame.draw.rect(screen, gb.top_pts_colour, 
+            #                  [points[0], points[1], gb.grid_cel_rect[2], gb.grid_cel_rect[3]], 
+            #                  gb.top_pts_size, 3)
 
-    # draw game-over last
+    # draw game-over
     if( gb.game_over == True ):
         screen.blit(game_over_surface, gb.game_over_xy)
 

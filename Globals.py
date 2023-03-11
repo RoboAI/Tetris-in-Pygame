@@ -74,7 +74,7 @@ class Globals:
     game_over_font_colour = "firebrick"
     bounding_box_colour = "dimgray"
     top_pts_colour = "papayawhip"
-    top_pts_size = 3
+    top_pts_size = 2
         
     game_over = False
     layers_cleared = 0

@@ -32,7 +32,7 @@ def get_distance_from_pts(p1, p2):
 # gets the top most blocks in the shape
 def get_points_on_top(points: list, offset_to_add: float): #TetriminoShape list
     # copy
-    a = [i.shape for i in points]
+    a = [i for i in points]
 
     # ignore - same as above
     #a = [[j for j in i.shape] for i in self.blocks]

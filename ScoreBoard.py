@@ -56,6 +56,12 @@ class ScoreBoard:
             self.layers_score = score
             self.layer_score_surface = self.layer_score_font.render(str(self.layers_score), True, self.scores_font_colour)
 
+        
+        # update scores texs
+        def update_scores_texts(self, score, rows_score):
+            self.update_player_score(score)
+            self.update_layers_score(rows_score)
+
         # TODO: this function should use the Rect that was given in the constructor
         def draw_texts(self, screen):
             screen.blit(self.layer_title_surface, gb.infobox_layer_title_xy)
