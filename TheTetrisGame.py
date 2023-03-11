@@ -558,76 +558,76 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     auto_move_interval.set_interval(auto_move_interval.interval + speed)
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
-# skip the menu
-def skip_menu(*args):
-    global in_menu
-
-    in_menu = False
-
 
 # TODO: this should be in its own file.
 # TODO: problem: how would this file's functions be called from InputProcessor's file?
 #------------------------------------------
 class InputProcessor:
     def __init__(self) -> None:
-        self.key_down_delegates = {
-            pygame.K_LEFT:    move_shape_left_once,
-            pygame.K_UP:      move_shape_up_once,
-            pygame.K_RIGHT:   move_shape_right_once,
-            pygame.K_DOWN:    move_shape_down_once,
-            pygame.K_r:       rotate_shape_cw,
-            pygame.K_RSHIFT:  rotate_shape_cw,
-            pygame.K_SPACE:   set_speed_max,
-            pygame.K_RETURN:  skip_menu}
+        self.key_down_delegates = {}
         
         self.key_up_delegates = {
             pygame.K_RETURN:  set_speed_to_normal}
+        
+    def add_keydown_callback(self, key, fn_callback):
+        self.key_down_delegates.update({key: fn_callback})
+
+    def add_keyup_callback(self, key, fn_callback):
+        self.key_up_delegates.update({key: fn_callback})
     
     def get_delegate_keydown(self, key_pressed):
         return self.key_down_delegates.get(key_pressed, None)
     
     def get_delegate_keyup(self, key_released):
         return self.key_up_delegates.get(key_released, None)
-#-------------------------------------------
+    
+    def process_inputs(self, *args) -> int:
+        # loop through input-events
+        for event in pygame.event.get():
 
-# TODO: move this somewhere else
-input_processor = InputProcessor()
-#---------------------
-
-#-------------------------------------------
-# processing inputs
-def process_inputs():
-    global in_menu
-    global running
-
-    # loop through input-events
-    for event in pygame.event.get():
-
-        # Did the user click the window close button?
-        if event.type == pygame.QUIT:
-            in_menu = False
-            running = False
-
-        # if game is not over
-        elif(gb.game_over == False):
+            # Did the user click the window close button?
+            if event.type == pygame.QUIT:
+                return event.type
 
             # check for key-down
             if event.type == pygame.KEYDOWN:
     
                 # get function delegate and call it
-                fn = input_processor.get_delegate_keydown(event.key)
+                fn = self.get_delegate_keydown(event.key)
                 if( fn != None ):
-                    fn(player_shape)
-
+                    fn(args[0])
 
             # check for key-up
             elif event.type == pygame.KEYUP:
 
                 # get function delegate and call it
-                fn = input_processor.get_delegate_keyup(event.key)
+                fn = self.get_delegate_keyup(event.key)
                 if( fn != None ):
-                    fn(player_shape)
+                    fn(args[0])
 #-------------------------------------------
+
+def skip_menu(*args):
+    global in_menu
+
+    in_menu = False
+
+
+# TODO: move this somewhere else
+menu_input_processor = InputProcessor()
+main_input_processor = InputProcessor()
+
+menu_input_processor.add_keydown_callback(pygame.K_RETURN, skip_menu)
+
+main_input_processor.add_keydown_callback(pygame.K_LEFT, move_shape_left_once)
+main_input_processor.add_keydown_callback(pygame.K_UP, move_shape_up_once)
+main_input_processor.add_keydown_callback(pygame.K_RIGHT, move_shape_right_once)
+main_input_processor.add_keydown_callback(pygame.K_DOWN, move_shape_down_once)
+main_input_processor.add_keydown_callback(pygame.K_r, rotate_shape_cw)
+main_input_processor.add_keydown_callback(pygame.K_RSHIFT, rotate_shape_cw)
+main_input_processor.add_keydown_callback(pygame.K_SPACE, set_speed_max)
+main_input_processor.add_keyup_callback(pygame.K_SPACE, set_speed_to_normal)
+#---------------------
+
 
 
 #-------------------------------------------
@@ -648,7 +648,9 @@ while in_menu:
     time_passed += clock.tick(60)
 
     # process inputs
-    process_inputs()
+    k = menu_input_processor.process_inputs(player_shape)
+    if(k == pygame.QUIT):
+        skip_menu()
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
@@ -671,7 +673,7 @@ while running:
     time_passed += clock.tick(60)
 
     # process inputs
-    process_inputs()
+    main_input_processor.process_inputs(player_shape)
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
