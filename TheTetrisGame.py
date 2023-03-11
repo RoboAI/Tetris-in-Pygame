@@ -113,6 +113,10 @@ clock = pygame.time.Clock()
 running = True
 #---------------------
 
+# menu loop
+in_menu = True
+#---------------------
+
 # TODO: change grid_walls to dictionary
 left_wall = [gb.grid_actual_rect[0], gb.grid_actual_rect[1]]
 right_wall = [gb.grid_actual_rect[2], 0]
@@ -159,7 +163,6 @@ draw_bounding_box = False
 touched_down_count = 1
 #---------------------
 
-
 #---------------------
 images = ShapeImages(pygame)
 rc = pygame.Rect(0, 0, 27, 27)
@@ -172,13 +175,13 @@ images.add_image("light-blue", "images/light-blue-low.png", rc)
 images.add_image("red", "images/red-low.png", rc)
 #---------------------
 
-
 splash_anim = SplashScreen(pygame, screen)
 #---------------------
 
 temp_rows_cleared_counter = 0
 #---------------------
 
+#---------------------------------------------------------
 # draws a single TetriminoShape
 def draw_shape(tetri_blocks: TetriminoShape):
     # loop trough all blocks drawing each
@@ -186,7 +189,13 @@ def draw_shape(tetri_blocks: TetriminoShape):
         dict_img = (images.sprites[block.colour])
         rc = dict_img[0].move(block.shape[0]-gb.grid_square_size_half, block.shape[1]-gb.grid_square_size_half)
         screen.blit(dict_img[1], rc)
-    
+
+
+# TODO: move displaying-GameOver stuff here
+def display_gameover():
+    pass
+#---------------------------------------------------------
+
 
 #TODO: this may be a duplicate of TetriminoShape.check_wall_collision()
 def check_wall_collision(shape: Tetrimino, walls, str_wall):
@@ -347,11 +356,6 @@ def update_player_scores(num_rows_cleared) -> None:
         increase_move_speed_by(player_shape, gb.game_speed_increment)
 
 
-# TODO: move displaying-GameOver stuff here
-def display_gameover():
-    pass
-
-
 # TODO: parameter current_shape isn't used. Also separate this function into sub-functions
 # TODO: maybe it'll be better if this returned layers_to_delete.
 # shape collided with bottom-wall
@@ -458,7 +462,7 @@ def find_shapepoints_at_bottom(grid_layers, moving_shape: TetriminoShape) -> Tet
     for blocks in moving_shape.blocks:
         found_points.append([blocks.shape[0], gb.grid_height + gb.grid_square_size_half])
 
-    # send the points and get which ones are on top
+    # send the points and filter which ones are on top
     found_points = get_points_on_top(found_points, -gb.grid_square_size_half)
 
     # return what is found
@@ -554,9 +558,16 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     auto_move_interval.set_interval(auto_move_interval.interval + speed)
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
+# skip the menu
+def skip_menu(*args):
+    global in_menu
+
+    in_menu = False
+
+
+# TODO: this should be in its own file.
+# TODO: problem: how would this file's functions be called from InputProcessor's file?
 #------------------------------------------
-
-
 class InputProcessor:
     def __init__(self) -> None:
         self.key_down_delegates = {
@@ -565,8 +576,9 @@ class InputProcessor:
             pygame.K_RIGHT:   move_shape_right_once,
             pygame.K_DOWN:    move_shape_down_once,
             pygame.K_r:       rotate_shape_cw,
-            pygame.K_SPACE:   rotate_shape_cw,
-            pygame.K_RETURN:  set_speed_max}
+            pygame.K_RSHIFT:  rotate_shape_cw,
+            pygame.K_SPACE:   set_speed_max,
+            pygame.K_RETURN:  skip_menu}
         
         self.key_up_delegates = {
             pygame.K_RETURN:  set_speed_to_normal}
@@ -578,22 +590,22 @@ class InputProcessor:
         return self.key_up_delegates.get(key_released, None)
 #-------------------------------------------
 
+# TODO: move this somewhere else
+input_processor = InputProcessor()
+#---------------------
 
 #-------------------------------------------
-input_processor = InputProcessor()
-counter = 0
+# processing inputs
+def process_inputs():
+    global in_menu
+    global running
 
-# main loop
-while running:
-
-    # set frame-rate and store time-elapsed since last frame
-    time_passed += clock.tick(60)
-
-    pygame.display.set_caption(str(auto_move_interval_actual.interval))
-
-    # Did the user click the window close button?
+    # loop through input-events
     for event in pygame.event.get():
+
+        # Did the user click the window close button?
         if event.type == pygame.QUIT:
+            in_menu = False
             running = False
 
         # if game is not over
@@ -601,7 +613,7 @@ while running:
 
             # check for key-down
             if event.type == pygame.KEYDOWN:
-       
+    
                 # get function delegate and call it
                 fn = input_processor.get_delegate_keydown(event.key)
                 if( fn != None ):
@@ -615,7 +627,51 @@ while running:
                 fn = input_processor.get_delegate_keyup(event.key)
                 if( fn != None ):
                     fn(player_shape)
+#-------------------------------------------
 
+
+#-------------------------------------------
+title_logo = pygame.image.load("images/title.png")
+scale = (gb.screen_width / title_logo.get_width()) / 1.5
+
+title_logo_rc = [0, 0, 
+                int(scale * title_logo.get_width()), int(scale * title_logo.get_height())]
+title_rect: pygame.Rect = pygame.Rect(title_logo_rc)
+title_rect.move_ip(gb.screen_width / 2 - title_rect.width / 2,
+                   25)
+title_logo = pygame.transform.scale(title_logo, title_rect.size)
+#-------------------------------------------
+
+# menu loop
+while in_menu:
+     # set frame-rate and store time-elapsed since last frame
+    time_passed += clock.tick(60)
+
+    # process inputs
+    process_inputs()
+
+    # Fill the background
+    screen.fill(gb.grid_bk_colour)
+
+    # draw title
+    screen.blit(title_logo, title_rect)
+    
+     # Flip the display
+    pygame.display.flip()
+#-------------------------------------------
+
+# reset it so behaves consistent everytime
+time_passed = 0
+#---------------------
+
+# main loop
+while running:
+
+    # set frame-rate and store time-elapsed since last frame
+    time_passed += clock.tick(60)
+
+    # process inputs
+    process_inputs()
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
@@ -672,6 +728,7 @@ while running:
 
     # Flip the display
     pygame.display.flip()
+#--------------------------------------------------------------
 
 # Done! Time to quit.
 pygame.quit()
