@@ -19,18 +19,19 @@ from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_poin
 
 gb = Globals()
 
-# get random shape
-def get_next_random_shape():
-    items = list(gb.GameShapes.items())
-    item = random.choice(items)
-    return item
 
 # get shape's corresponding colour
 def get_shape_colour(shape_name) -> str:
     colour = gb.GameShapeColours.get(shape_name)
     return colour
 
+# get random shape
+def get_next_random_shape():
+    items = list(gb.GameShapes.items())
+    item = random.choice(items)
+    return item
 
+# setup new shape from template
 def setup_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
     new_shape = TetriminoShape()
     new_shape.desc = game_shape[0]
@@ -41,28 +42,19 @@ def setup_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
     new_shape.set_colour(get_shape_colour(new_shape.desc))
     return new_shape
 
-
-# copied above function as for some reason new_shape.set_pos isnt calling parent-classes function,
-# which in turn is giving problems with initial position of the shape
-def setup_next_shape(game_shape):# game_shape is from Globals.GameShape[i]
-    new_shape = TetriminoShape()
-    new_shape.desc = game_shape[0]
+# setup new shape from template
+def setup_new_pending_shape(game_shape):# game_shape is from Globals.GameShape[i]
+    new_shape = setup_new_shape(game_shape)
     new_shape.set_shape(game_shape[1][1])
-    new_shape.rotation_index = game_shape[1][0]
     new_shape.set_pos(gb.infobox_next_shape_xy[0], gb.infobox_next_shape_xy[1], gb.grid_square_size)
-    #new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -1)
     new_shape.set_colour(get_shape_colour(new_shape.desc))
     return new_shape
 
 
-# fix this: it works but get GameShapes should return {key: value} not just {value}
-# then return should be: return setup_new_shape(found_item)
+# gets new shape by name. Does not return fully-constructed shape
 def get_new_shape_by_name(shape_name) -> TetriminoShape:
-    items = list(gb.GameShapes.items())
-    item = gb.GameShapes.get(shape_name)
-    item = [i for i in items if i[0] == shape_name]
-    item = item[0]
-    return item
+    item = [i for i in gb.GameShapes.items() if i[0] == shape_name]
+    return item[0]
 
 
 # start main theme
@@ -437,8 +429,7 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
     player_shape = setup_new_shape(get_new_shape_by_name(player_next_shape.desc))
 
     # get new next shape
-    player_next_shape = setup_next_shape(get_next_random_shape())
-    #player_next_shape = get_new_shape_by_name("I")
+    player_next_shape = setup_new_pending_shape(get_next_random_shape())
 
     # TODO: take this somewhere else
     # update bounding box and top-points
@@ -635,11 +626,11 @@ time_passed = 0
 
 #------------------------------------------
 player_shape = setup_new_shape(get_next_random_shape())
-player_next_shape = setup_next_shape(get_next_random_shape())
+player_next_shape = setup_new_pending_shape(get_next_random_shape())
 #-------------------------------------------
 
-abcde = get_next_random_shape()
-abcd1 = get_new_shape_by_name("I")
+# abcde = get_next_random_shape()
+# abcd1 = get_new_shape_by_name("I")
 
 # main loop
 while running:

@@ -40,7 +40,8 @@ class TetriminoShape():
         for i in range(len(self.blocks)):
             self.blocks[i].shape[0] = (self.blocks[i].shape[0] * block_spacing) + x
             self.blocks[i].shape[1] = (self.blocks[i].shape[1] * block_spacing) + y
-            
+    
+    # add to current position
     def add_to_pos(self, x, y):
         for b in self.blocks:
             b.add_to_pos(x, y)
@@ -60,6 +61,7 @@ class TetriminoShape():
     def set_colour(self, colour):
         for b in self.blocks:
             b.colour = colour
+        self.colour = colour
 
     # check if this shape (any block) is colliding with colliding_object
     def check_collision(self, col_direction: str, colliding_object: TetriminoDot, collision_spacing: float):

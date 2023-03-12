@@ -7,14 +7,12 @@ from Globals import Globals
 gb = Globals
 
 class TetriminoDot(Tetrimino):
-    def __init__(self):
-        super().__init__()
-        self.shape: float = [0,0]
-        self.colour = "dark blue"
     
     def __init__(self, x: float, y: float):
         super().__init__()
         self.shape: float = [x, y]
+        self.original: float = [0,0]
+        self.colour = "dark blue"
 
     #def __init__(self, points: float):
         #super().__init__()
@@ -23,13 +21,12 @@ class TetriminoDot(Tetrimino):
     def set_pos(self, x: float, y: float):
         self.shape[0] = x
         self.shape[1] = y
+        self.original[0] = x
+        self.original[1] = y
 
     def add_to_pos(self, x: float, y: float):
         self.shape[0] += x
         self.shape[1] += y
-
-    def find_block(self, x: float, y: float) -> bool:
-        pass
 
     def get_bounds(self):
         return ([self.shape[0]-1, self.shape[1]-1, 1, 1])
