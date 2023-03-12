@@ -38,8 +38,8 @@ class TetriminoShape():
     # set position for all of the blocks, using thier previous offset
     def set_pos(self, x: float, y: float, block_spacing):
         for i in range(len(self.blocks)):
-            self.blocks[i].shape[0] = (self.blocks[i].shape[0] * block_spacing) + x
-            self.blocks[i].shape[1] = (self.blocks[i].shape[1] * block_spacing) + y
+            self.blocks[i].shape[0] = (self.blocks[i].original[0] * block_spacing) + x
+            self.blocks[i].shape[1] = (self.blocks[i].original[1] * block_spacing) + y
     
     # add to current position
     def add_to_pos(self, x, y):

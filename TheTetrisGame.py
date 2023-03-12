@@ -25,36 +25,47 @@ def get_shape_colour(shape_name) -> str:
     colour = gb.GameShapeColours.get(shape_name)
     return colour
 
-# get random shape
-def get_next_random_shape():
-    items = list(gb.GameShapes.items())
-    item = random.choice(items)
-    return item
-
 # setup new shape from template
-def setup_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
+def get_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
     new_shape = TetriminoShape()
     new_shape.desc = game_shape[0]
     new_shape.set_shape(game_shape[1][1])
     new_shape.rotation_index = game_shape[1][0]
+    new_shape.set_colour(get_shape_colour(new_shape.desc))
+    return new_shape
+
+# setup new player shape from template
+def get_new_player_shape(game_shape):# game_shape is from Globals.GameShape[i]
+    new_shape = get_new_shape(game_shape)
+
+    # set its position to the play area
     new_shape.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
     new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
-    new_shape.set_colour(get_shape_colour(new_shape.desc))
     return new_shape
 
-# setup new shape from template
-def setup_new_pending_shape(game_shape):# game_shape is from Globals.GameShape[i]
-    new_shape = setup_new_shape(game_shape)
-    new_shape.set_shape(game_shape[1][1])
+# setup new pending shape from template, using the function above
+def get_new_pending_shape(game_shape):# game_shape is from Globals.GameShape[i]
+    new_shape = get_new_shape(game_shape)
+
+    # set its position to the infobox
     new_shape.set_pos(gb.infobox_next_shape_xy[0], gb.infobox_next_shape_xy[1], gb.grid_square_size)
-    new_shape.set_colour(get_shape_colour(new_shape.desc))
     return new_shape
 
+# gets shape tenmplate by random
+def get_new_random_shape():
+    items = list(gb.GameShapes.items())
+    item = random.choice(items)
+    return item
 
-# gets new shape by name. Does not return fully-constructed shape
-def get_new_shape_by_name(shape_name) -> TetriminoShape:
-    item = [i for i in gb.GameShapes.items() if i[0] == shape_name]
-    return item[0]
+# get shape template by name
+def get_shape_template(name: str):
+    # find shape_name in GameShapes
+    item = [i for i in gb.GameShapes.items() if i[0] == name]
+    return item[0] if len(item) > 0 else None
+
+# gets shape template by name
+def get_new_player_shape_by_name(name) -> TetriminoShape:
+    return get_new_player_shape( get_shape_template(name) )
 
 
 # start main theme
@@ -97,9 +108,27 @@ score_board = ScoreBoard(pygame)
 score_board.init_fonts(gb.titles_font_colour, gb.scores_font_colour, gb.layers_score_title, gb.player_score_title)
 #---------------------
 
+# TODO: move this to its own file
+#---------------------------------------------------------
 # game over font
-game_over_font = pygame.font.SysFont(gb.game_main_font, 50)
+game_over_font = pygame.font.SysFont(gb.game_main_font, 40)
 game_over_surface = game_over_font.render('Game Over', True, gb.game_over_font_colour)
+gameover_banner_rc = pygame.Rect(gb.grid_actual_rect[0], 
+                                 gb.grid_actual_rect[3] / 2 - game_over_surface.get_height() / 2,
+                                 gb.grid_width, 
+                                 game_over_surface.get_height())
+
+gameover_text_rc = pygame.Rect(gameover_banner_rc.left + (gameover_banner_rc.width / 2 - game_over_surface.get_width() / 2),
+                        gameover_banner_rc.top + (gameover_banner_rc.height / 2 - game_over_surface.get_height() / 2),
+                        game_over_surface.get_width(),
+                        game_over_surface.get_height())
+
+def display_gameover():
+    pygame.draw.rect(screen, "black", gameover_banner_rc)
+    screen.blit(game_over_surface, gameover_text_rc)
+#---------------------------------------------------------
+
+
 #---------------------
 
 # Get the Clock to limit frame-rate
@@ -184,12 +213,6 @@ def draw_shape(tetri_blocks: TetriminoShape):
         dict_img = (images.sprites[block.colour])
         rc = dict_img[0].move(block.shape[0]-gb.grid_square_size_half, block.shape[1]-gb.grid_square_size_half)
         screen.blit(dict_img[1], rc)
-
-
-# TODO: move displaying-GameOver stuff here
-def display_gameover():
-    pass
-#---------------------------------------------------------
 
 
 #TODO: this may be a duplicate of TetriminoShape.check_wall_collision()
@@ -426,10 +449,10 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
         #---------------------------------------------------
 
     # switch current-shape to the displayed next-shape
-    player_shape = setup_new_shape(get_new_shape_by_name(player_next_shape.desc))
+    player_shape = get_new_player_shape_by_name(player_next_shape.desc)
 
     # get new next shape
-    player_next_shape = setup_new_pending_shape(get_next_random_shape())
+    player_next_shape = get_new_pending_shape(get_new_random_shape())
 
     # TODO: take this somewhere else
     # update bounding box and top-points
@@ -625,8 +648,8 @@ time_passed = 0
 #-------------------------------------------
 
 #------------------------------------------
-player_shape = setup_new_shape(get_next_random_shape())
-player_next_shape = setup_new_pending_shape(get_next_random_shape())
+player_shape = get_new_player_shape(get_new_random_shape())
+player_next_shape = get_new_pending_shape(get_new_random_shape())
 #-------------------------------------------
 
 # abcde = get_next_random_shape()
@@ -695,7 +718,7 @@ while running:
 
     # draw game-over
     if( gb.game_over == True ):
-        screen.blit(game_over_surface, gb.game_over_xy)
+        display_gameover()
 
     # Flip the display
     pygame.display.flip()
