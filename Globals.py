@@ -83,6 +83,8 @@ class Globals:
     row_cleared_points = 3
     multi_row_bonus = 5
     game_speed_increment = 100
+    next_level_threshold = 2 # increase game speed after every 'x' layers cleared
+    max_layers_cleared_speed_inc = 50 # > than this, then no more speed increase
 
     border_thickness = 1
 

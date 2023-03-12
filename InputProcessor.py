@@ -21,21 +21,22 @@ class InputProcessor:
     def get_delegate_keyup(self, key_released):
         return self.key_up_delegates.get(key_released, None)
     
-    def process_inputs(self, *args) -> int:
+    def process_inputs(self, *args) -> list:
         # loop through input-events
         for event in pygame.event.get():
 
             # Did the user click the window close button?
             if event.type == pygame.QUIT:
-                return event.type
+                return ([event, None])
 
             # check for key-down
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
     
                 # get function delegate and call it
                 fn = self.get_delegate_keydown(event.key)
                 if( fn != None ):
-                    fn(args[0])
+                    return ([event, fn(args[0])])
+                return ([event, None])
 
             # check for key-up
             elif event.type == pygame.KEYUP:
@@ -43,5 +44,6 @@ class InputProcessor:
                 # get function delegate and call it
                 fn = self.get_delegate_keyup(event.key)
                 if( fn != None ):
-                    fn(args[0])
+                    return ([event, fn(args[0])])
+                return ([event, None])
 #-------------------------------------------

@@ -13,6 +13,7 @@ from ScoreBoard import ScoreBoard
 from SoundManager import SoundManager
 from AutoDownMoveInterval import AutoDownMoveInterval
 from InputProcessor import InputProcessor
+from ScreenMainMenu import ScreenMainMenu
 from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
 
 
@@ -24,7 +25,7 @@ def get_next_random_shape():
     item = random.choice(items)
     return item
 
-# get random colour
+# get shape's corresponding colour
 def get_shape_colour(shape_name) -> str:
     colour = gb.GameShapeColours.get(shape_name)
     return colour
@@ -57,8 +58,11 @@ def setup_next_shape(game_shape):# game_shape is from Globals.GameShape[i]
 # fix this: it works but get GameShapes should return {key: value} not just {value}
 # then return should be: return setup_new_shape(found_item)
 def get_new_shape_by_name(shape_name) -> TetriminoShape:
-    found_item = gb.GameShapes.get(shape_name)
-    return setup_new_shape([shape_name, found_item])
+    items = list(gb.GameShapes.items())
+    item = gb.GameShapes.get(shape_name)
+    item = [i for i in items if i[0] == shape_name]
+    item = item[0]
+    return item
 
 
 # start main theme
@@ -139,8 +143,7 @@ for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
 #---------------------
 
 # current shape
-player_shape = get_next_random_shape()
-player_shape = setup_new_shape(player_shape)
+player_shape = None
 #---------------------
 # player_shape = get_new_shape_by_name("S")
 # player_shape.blocks[0].colour = "blue"
@@ -150,8 +153,7 @@ player_shape = setup_new_shape(player_shape)
 #---------------------
 
 # next shape
-player_next_shape = get_next_random_shape()
-player_next_shape = setup_next_shape(player_next_shape)
+player_next_shape = None
 #---------------------
 
 # shape markers
@@ -349,12 +351,17 @@ def update_player_scores(num_rows_cleared) -> None:
 
     gb.player_score += (gb.row_cleared_points * num_rows_cleared) + (gb.multi_row_bonus * (num_rows_cleared - 1))
     gb.layers_cleared += num_rows_cleared
-    gb.player_level = gb.layers_cleared % 5
+    if(gb.layers_cleared % gb.next_level_threshold == 0):
+        gb.player_level += 1 
     temp_rows_cleared_counter += num_rows_cleared
 
-    if(gb.layers_cleared < 50 and temp_rows_cleared_counter >= 1):
-        temp_rows_cleared_counter = 0
+    # if next-speed-increase condition is met
+    if(gb.layers_cleared < gb.max_layers_cleared_speed_inc and 
+       temp_rows_cleared_counter >= gb.next_level_threshold ):
+        # increase movemnet speed
         increase_move_speed_by(player_shape, gb.game_speed_increment)
+        # remove gb.next_level_threshold from counter, leaving the remainder to continue counting
+        temp_rows_cleared_counter %= gb.next_level_threshold
 
 
 # TODO: parameter current_shape isn't used. Also separate this function into sub-functions
@@ -427,10 +434,11 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
         #---------------------------------------------------
 
     # switch current-shape to the displayed next-shape
-    player_shape = get_new_shape_by_name(player_next_shape.desc)
+    player_shape = setup_new_shape(get_new_shape_by_name(player_next_shape.desc))
 
     # get new next shape
     player_next_shape = setup_next_shape(get_next_random_shape())
+    #player_next_shape = get_new_shape_by_name("I")
 
     # TODO: take this somewhere else
     # update bounding box and top-points
@@ -555,7 +563,6 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     global auto_move_interval_actual
     global auto_move_interval_fast
 
-    #auto_move_interval_temp.set_interval(auto_move_interval.interval)
     auto_move_interval.set_interval(auto_move_interval.interval + speed)
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
@@ -574,59 +581,65 @@ def quit_game():
 
 
 
-# TODO: move this somewhere else
-menu_input_processor = InputProcessor()
-main_input_processor = InputProcessor()
-
-menu_input_processor.add_keydown_callback(pygame.K_RETURN, skip_menu)
-
-main_input_processor.add_keydown_callback(pygame.K_LEFT, move_shape_left_once)
-main_input_processor.add_keydown_callback(pygame.K_UP, move_shape_up_once)
-main_input_processor.add_keydown_callback(pygame.K_RIGHT, move_shape_right_once)
-main_input_processor.add_keydown_callback(pygame.K_DOWN, move_shape_down_once)
-main_input_processor.add_keydown_callback(pygame.K_r, rotate_shape_cw)
-main_input_processor.add_keydown_callback(pygame.K_RSHIFT, rotate_shape_cw)
-main_input_processor.add_keydown_callback(pygame.K_SPACE, set_speed_max)
-main_input_processor.add_keyup_callback(pygame.K_SPACE, set_speed_to_normal)
-#---------------------
-
+#-------------------------------------------
+main_menu = ScreenMainMenu()
+#-------------------------------------------
 
 
 #-------------------------------------------
-title_logo = pygame.image.load("images/title.png")
-scale = (gb.screen_width / title_logo.get_width()) / 1.5
-
-title_logo_rc = [0, 0, 
-                int(scale * title_logo.get_width()), int(scale * title_logo.get_height())]
-title_rect: pygame.Rect = pygame.Rect(title_logo_rc)
-title_rect.move_ip(gb.screen_width / 2 - title_rect.width / 2,
-                   25)
-title_logo = pygame.transform.scale(title_logo, title_rect.size)
+menu_level_input = InputProcessor()
+menu_level_input.add_keydown_callback(pygame.K_RETURN, main_menu.keydown_return)
+menu_level_input.add_keydown_callback(pygame.K_DOWN, main_menu.keydown_down)
+menu_level_input.add_keydown_callback(pygame.K_UP, main_menu.keydown_up)
 #-------------------------------------------
 
+#-------------------------------------------
+main_level_input = InputProcessor()
+main_level_input.add_keydown_callback(pygame.K_LEFT, move_shape_left_once)
+main_level_input.add_keydown_callback(pygame.K_UP, move_shape_up_once)
+main_level_input.add_keydown_callback(pygame.K_RIGHT, move_shape_right_once)
+main_level_input.add_keydown_callback(pygame.K_DOWN, move_shape_down_once)
+main_level_input.add_keydown_callback(pygame.K_r, rotate_shape_cw)
+main_level_input.add_keydown_callback(pygame.K_RSHIFT, rotate_shape_cw)
+main_level_input.add_keydown_callback(pygame.K_SPACE, set_speed_max)
+main_level_input.add_keydown_callback(pygame.K_RETURN, set_speed_max)
+main_level_input.add_keyup_callback(pygame.K_SPACE, set_speed_to_normal)
+main_level_input.add_keyup_callback(pygame.K_RETURN, set_speed_to_normal)
+#-------------------------------------------
+
+#-------------------------------------------
 # menu loop
-while in_menu:
+while in_menu and running:
      # set frame-rate and store time-elapsed since last frame
     time_passed += clock.tick(60)
 
     # process inputs
-    k = menu_input_processor.process_inputs(player_shape)
-    if(k == pygame.QUIT):
-        skip_menu()
+    e = menu_level_input.process_inputs(None)
+    if(e != None and e[0] != None):
+        if(e[0].type == pygame.QUIT):
+            quit_game()
+        elif(e[1] != None and e[1] == "start"):
+            skip_menu()
 
-    # Fill the background
-    screen.fill(gb.grid_bk_colour)
-
-    # draw title
-    screen.blit(title_logo, title_rect)
+    # draw the menu
+    main_menu.draw(screen)
     
      # Flip the display
     pygame.display.flip()
 #-------------------------------------------
 
+#-------------------------------------------
 # reset it so behaves consistent everytime
 time_passed = 0
-#---------------------
+#-------------------------------------------
+
+#------------------------------------------
+player_shape = setup_new_shape(get_next_random_shape())
+player_next_shape = setup_next_shape(get_next_random_shape())
+#-------------------------------------------
+
+abcde = get_next_random_shape()
+abcd1 = get_new_shape_by_name("I")
 
 # main loop
 while running:
@@ -635,9 +648,10 @@ while running:
     time_passed += clock.tick(60)
 
     # process inputs
-    k = main_input_processor.process_inputs(player_shape)
-    if(k == pygame.QUIT):
-        quit_game()
+    e = main_level_input.process_inputs(player_shape)
+    if(e != None and e[0] != None):
+        if(e[0].type == pygame.QUIT):
+            quit_game()
 
     # Fill the background
     screen.fill(gb.grid_bk_colour)
