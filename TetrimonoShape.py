@@ -12,13 +12,15 @@ class TetriminoShape():
         self.moving = True
         self.desc = "none"
         self.rotation_index: int = 0
-        self.box = None # list
+        self.box = None # bounding-box coords
     
+    # sets the shape for this object
     def set_shape(self, shape_points):
         self.blocks: TetriminoDot = []
         for single_block in shape_points:
              self.blocks.append(TetriminoDot(single_block[0], single_block[1]))
     
+    # remove block from self.blocks
     def remove_block(self, block: TetriminoDot) -> bool:
         for i in range(len(self.blocks)):
             if( self.blocks[i] == block ):
@@ -27,7 +29,6 @@ class TetriminoShape():
                     return True
                 except ValueError:
                     return False
-        
 
     #TODO: not useful as it sets all of the objects x,y to the same value (overlapping)
     def set_pos(self, x: float, y: float):

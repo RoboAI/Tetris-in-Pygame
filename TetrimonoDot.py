@@ -10,8 +10,8 @@ class TetriminoDot(Tetrimino):
     
     def __init__(self, x: float, y: float):
         super().__init__()
-        self.shape: float = [x, y]
-        self.original: float = [x,y]
+        self.shape: float = [x, y] # position of the object
+        self.original: float = [x,y] # original shape, not changed
         self.colour = "dark blue"
 
     #def __init__(self, points: float):
