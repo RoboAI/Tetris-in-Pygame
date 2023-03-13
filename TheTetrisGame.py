@@ -444,7 +444,7 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
                 shift_layer_down(all_layers, adjusted_layer_keys[i],
                                  (keys[i] - adjusted_layer_keys[i]) / gb.grid_square_size)
 
-        # add the missing top layers
+        # replace the removed layers with new ones
         add_missing_layers()
         #---------------------------------------------------
 
@@ -580,6 +580,9 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     auto_move_interval.set_interval(auto_move_interval.interval + speed)
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
+# go back to menu
+def go_back_to_menu():
+    pass
 
 #-------------------------------------------
 def skip_menu(*args):
@@ -617,6 +620,7 @@ main_level_input.add_keydown_callback(pygame.K_r, rotate_shape_cw)
 main_level_input.add_keydown_callback(pygame.K_RSHIFT, rotate_shape_cw)
 main_level_input.add_keydown_callback(pygame.K_SPACE, set_speed_max)
 main_level_input.add_keydown_callback(pygame.K_RETURN, set_speed_max)
+main_level_input.add_keydown_callback(pygame.K_ESCAPE, go_back_to_menu)
 main_level_input.add_keyup_callback(pygame.K_SPACE, set_speed_to_normal)
 main_level_input.add_keyup_callback(pygame.K_RETURN, set_speed_to_normal)
 #-------------------------------------------

@@ -1,3 +1,4 @@
+import collections
 import pygame
 
 from Globals import Globals
@@ -5,25 +6,29 @@ from InputProcessor import InputProcessor
 
 gb = Globals
 
+MenuSelection = collections.namedtuple("MenuItem", ["name", "surface", "rect", "selected"])
+
 class ScreenMainMenu:
     def __init__(self) -> None:
         self.title_logo: pygame.Surface = None
         self.title_logo_rc = [0,0,0,0]
-        self.start_text = "Start"
-        self.controls_text = "Controls"
-        self.selection = 0
+        self.menu_selections = ["Start", "Controls", "Credits"]
+        self.menu_dict = {}
+        self.selection: int = 0
 
         self.off_font_colour = "darkgray"
         self.on_font_colour = "white"
-        self.start_rc = None
-        self.controls_rc = None
         self.font: pygame.font.SysFont = None
-        self.start_surface: pygame.Surface = None
-        self.controls_surface: pygame.Surface = None
         self.font_family = "Comic Sans MS"
         self.font_size = 30
 
         self.init()
+
+
+    def init(self):
+        self.init_title()
+        self.init_menu()
+        self.highlight_menu(self.menu_selections[self.selection])
     
     def init_title(self):
         self.title_logo = pygame.image.load("images/title.png")
@@ -45,94 +50,73 @@ class ScreenMainMenu:
     def init_menu(self):
         self.font = pygame.font.SysFont(self.font_family, self.font_size)
 
-        self.start_surface = self.font.render(self.start_text, True, self.on_font_colour)
-        self.controls_surface = self.font.render(self.controls_text, True, self.off_font_colour)
+        for i in range(len(self.menu_selections)):
+            surface = self.font.render(self.menu_selections[i], True, self.off_font_colour)
         
-        #self.start_surface = pygame.Surface(0,0,0,0)
-        #scale = self.start_surface.get_width() / self.start_surface.get_height()
-        #text_rect = pygame.Rect(self.start_surface.get_rect())
-        #text_rect.inflate_ip()
-        #self.start_surface = pygame.transform.scale(self.start_surface, text_rect.size)
+            rect = surface.get_rect()
+            r = pygame.Rect(
+                gb.screen_width / 2 - rect.width / 2, 
+                gb.screen_height / 2 - rect.height / 2 + (i * rect.height) + (i * 10) + 50,
+                gb.screen_width / 2 + rect.width / 2, 
+                gb.screen_height / 2 + rect.height + (i * rect.height) + ( i * 10) + 50)
+        
+            new_menu_item = MenuSelection(self.menu_selections[i], surface, r, False)
 
-        self.start_rc = [gb.screen_width / 2 - self.start_surface.get_width() / 2, 
-                         gb.screen_height / 2 + 50]
-        self.controls_rc = [gb.screen_width / 2 - self.controls_surface.get_width() / 2, 
-                         gb.screen_height / 2 + 100]
-        
- 
-    def init(self):
-        self.init_title()
-        self.init_menu()
-        self.highlight_menu(self.start_text)
+            self.menu_dict.update({self.menu_selections[i] : new_menu_item})
 
 
     def highlight_menu(self, menu_name: str):
-        if(menu_name.lower() == self.start_text.lower()):
-            self.start_surface = self.font.render(self.start_text, True, self.on_font_colour)
-            self.controls_surface = self.font.render(self.controls_text, True, self.off_font_colour)
-        elif(menu_name.lower() == self.controls_text.lower()):
-            self.start_surface = self.font.render(self.start_text, True, self.off_font_colour)
-            self.controls_surface = self.font.render(self.controls_text, True, self.on_font_colour)
-        else:
-            pass
+        if(menu_name not in self.menu_dict):
+            return
+        
+        if(self.menu_dict.get(menu_name).selected == True):
+            return
+        
+        # find menu to be highlighted
+        menu_item_select = self.menu_dict.get(menu_name)
 
+        # find menu to be de-highlighted
+        menu_list = list(self.menu_dict.values())
+        menu_items_unselect = [i for i in menu_list if i.selected == True]
 
-    def menu_hovered(self, selection: int):
-        if(selection == 0):
-            self.highlight_menu(self.start_text)
-        elif(selection == 1):
-            self.highlight_menu(self.controls_text)
-        else:
-            pass
+        # draw highlighted version
+        new_surface = self.font.render(menu_item_select.name, True, self.on_font_colour)
+        
+        # update data and dictionary
+        menu_item_select = menu_item_select._replace(surface = new_surface, selected = True)
+        self.menu_dict.pop(menu_name)
+        self.menu_dict.update({menu_name : menu_item_select})
 
+        # de-highlight others
+        for item_name in menu_items_unselect:
+            new_surface = self.font.render(item_name.name, True, self.off_font_colour)
+            updated_item = self.menu_dict.get(item_name.name)._replace(surface = new_surface, selected = False)
+            self.menu_dict.pop(item_name.name)
+            self.menu_dict.update({item_name.name : updated_item})
+
+    # key-down event
     def keydown_down(self, *args):
         self.selection += 1
-        if(self.selection >= 2):
-            self.selection = 1
-        self.menu_hovered(self.selection)
+        if(self.selection >= len(self.menu_selections)):
+            self.selection = 0
+        self.highlight_menu(self.menu_selections[self.selection])
 
         return None
 
+    # key-up event
     def keydown_up(self, *args):
         self.selection -= 1
         if(self.selection < 0):
-            self.selection = 0
-        self.menu_hovered(self.selection)
+            self.selection = len(self.menu_selections) - 1
+        self.highlight_menu(self.menu_selections[self.selection])
 
         return None
 
+    # key-return event
     def keydown_return(self, *args):
-        if(self.selection == 0):
-            return self.start_text.lower()
-        elif(self.selection == 1):
-            return self.controls_text.lower()
-        else:
-            pass
-        
-        return 
+        return self.menu_selections[self.selection].lower()
 
-
-    # def do_input(self, event: pygame.event) -> str:
-    #     if(event.key == pygame.K_RETURN):
-    #         if(self.selection == 0):
-    #             return self.start_text.lower()
-    #         elif(self.selection == 1):
-    #             return self.controls_text.lower()
-    #         else:
-    #             pass
-        
-    #     if(event.key == pygame.K_DOWN):
-    #         self.selection += 1
-    #         if(self.selection >= 2):
-    #             self.selection = 1
-    #     elif(event.key == pygame.K_UP):
-    #         self.selection -= 1
-    #         if(self.selection < 0):
-    #             self.selection = 0
-
-    #     self.menu_hovered(self.selection)
-
-
+    # draw all
     def draw(self, screen: pygame.Surface):
         # Fill the background
         screen.fill(gb.grid_bk_colour)
@@ -141,5 +125,5 @@ class ScreenMainMenu:
         screen.blit(self.title_logo, self.title_logo_rc)
 
         # draw buttons
-        screen.blit(self.start_surface, self.start_rc)
-        screen.blit(self.controls_surface, self.controls_rc)
+        for item in self.menu_dict.values():
+            screen.blit(item.surface, item.rect)

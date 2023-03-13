@@ -27,13 +27,20 @@ print(mylist1)
 print(type(mylist4))
 print(type(mylist1))
 print("----------------------------------")
-print("----------------------------------")
-print("----------------------------------")
 a = 5
 b = a
 b = 10
 print(a)
-
+print("----------------------------------")
+tup1 = (1,2,3,4,5)
+tup = tup1[1:3:2]
+print(tup)
+tup = tup1[-1:-3:-1]
+print(tup)
+print("----------------------------------")
+a = ["one", "two", "three", "four"]
+b = a[-4]
+print(b)
 #--------------------------
 
 class Globals:
