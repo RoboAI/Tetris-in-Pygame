@@ -1,48 +1,6 @@
 from Tetrimino import Tetrimino
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
-#--------------------------
-# TODO: remove these after finished
-matrix = [[[j for j in range(5)] for i in range(4)] for x in range(2)]
-print(matrix)
-
-stocks = ['reliance', 'infosys', 'tcs']
-prices = [2175, 1127, 2750]
-mylist = [[2,2],[3,3],[4,4]]
-mylist2 = [[1,1],[1,1],[-1,-1]]
-mylist3 = [1,2,3,4,5]
-mylist4 = [1]
-a = zip(mylist3, mylist4)
-print(set(a))
-a = zip(stocks, prices)
-print(set(a))
-mylist3 = [1,2,3,4,5]
-mylist4 = [1,4,5]
-mylist1 = [[2,2],[3,3],[4,4],[5,5]]
-mylist2 = [[3,3],[4,4]]
-list1 = [i for i in mylist1 if i not in mylist2]
-print(str(list1))
-print(mylist4)
-print(mylist1)
-print(type(mylist4))
-print(type(mylist1))
-print("----------------------------------")
-a = 5
-b = a
-b = 10
-print(a)
-print("----------------------------------")
-tup1 = (1,2,3,4,5)
-tup = tup1[1:3:2]
-print(tup)
-tup = tup1[-1:-3:-1]
-print(tup)
-print("----------------------------------")
-a = ["one", "two", "three", "four"]
-b = a[-4]
-print(b)
-#--------------------------
-
 class Globals:
     def __init__(self):
         self.IBlock = [2, [[0,0],[1,0],[2,0],[3,0]]]
@@ -80,8 +38,9 @@ class Globals:
     scores_font_colour = "orange"
     game_over_font_colour = "firebrick"
     bounding_box_colour = "dimgray"
+    shadow_colour = "orange"
     top_pts_colour = "papayawhip"
-    top_pts_size = 2
+    top_pts_size = 1
         
     game_over = False
     layers_cleared = 0

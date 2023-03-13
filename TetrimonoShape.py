@@ -181,41 +181,6 @@ class TetriminoShape():
         y2 += gb.grid_square_size_half
 
         return [x1,y1,x2-x1,y2-y1]
-
-    # gets the top most blocks in the shape
-    def get_points_on_top(self):
-        # get blocks into a 2D array
-        a = [i.shape for i in self.blocks]
-
-        # ignore - same as above
-        #a = [[j for j in i.shape] for i in self.blocks]
-        
-        # sort by x-axis
-        a.sort(key = lambda x: x[0])
-        found_points = []
-        while(len(a) > 0):
-            # filter by most-left-only (can be more than one)
-            b = [[j for j in i] for i in a if i[0] == a[0][0]] #a[0][i] must match above x[i]!!
-            
-            # now sort by y-axis to find the top most point
-            b.sort(key = lambda x: x[1])
-
-            # if there are any points in list
-            if(len(b) > 0):
-                # add point to found-points  
-                found_points.append(b[0])
-
-                # remove newly found points from original list
-                a = [i for i in a if i not in b]
-            
-            else:# if nothing is left then just return
-                break
-        
-        # move points to the top of the block
-        for pts in found_points:
-            pts[1] -= gb.grid_square_size_half
-            
-        return found_points
     
     def update_bounding_box(self):
         self.box = self.get_bounding_box()

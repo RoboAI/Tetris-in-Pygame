@@ -174,7 +174,7 @@ player_shape = None
 #---------------------
 
 # next shape
-player_next_shape = None
+next_shape = None
 #---------------------
 
 # shape markers
@@ -384,7 +384,7 @@ def update_player_scores(num_rows_cleared) -> None:
 # shape collided with bottom-wall
 def shape_touched_down(current_shape: TetriminoShape) -> bool:
     global player_shape
-    global player_next_shape
+    global next_shape
 
     scores_updated = False
 
@@ -449,10 +449,10 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
         #---------------------------------------------------
 
     # switch current-shape to the displayed next-shape
-    player_shape = get_new_player_shape_by_name(player_next_shape.desc)
+    player_shape = get_new_player_shape_by_name(next_shape.desc)
 
     # get new next shape
-    player_next_shape = get_new_pending_shape(get_new_random_shape())
+    next_shape = get_new_pending_shape(get_new_random_shape())
 
     # TODO: take this somewhere else
     # update bounding box and top-points
@@ -471,13 +471,14 @@ def find_shapepoints_at_bottom(grid_layers, moving_shape: TetriminoShape) -> Tet
     # if there are shapes landed..
     if(len(game_shapes) > 0):
 
-        # then loop through all shapes seeing if there are any below/above it
+        # then loop through all shapes seeing if there are any below
         for blocks in moving_shape.blocks:
             for row_key in grid_layers.keys():
                 for cell in grid_layers.get(row_key):
-                    if(blocks.shape[0] == cell.shape[0]):
+                    if((blocks.shape[0] == cell.shape[0]) and (blocks.shape[1] < cell.shape[1])):
                         # if found then add it to found_points
                         found_points.append(cell.shape)
+                        break
     
     # (an easy way) add the bottom wall's corresponding-edge-points to the list
     # if there are any blocks on it, then these points will be filtered out anyway, 
@@ -581,7 +582,7 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
 # go back to menu
-def go_back_to_menu():
+def go_back_to_menu(*args):
     pass
 
 #-------------------------------------------
@@ -653,11 +654,9 @@ time_passed = 0
 
 #------------------------------------------
 player_shape = get_new_player_shape(get_new_random_shape())
-player_next_shape = get_new_pending_shape(get_new_random_shape())
+next_shape = get_new_pending_shape(get_new_random_shape())
 #-------------------------------------------
 
-# abcde = get_next_random_shape()
-# abcd1 = get_new_shape_by_name("I")
 
 # main loop
 while running:
@@ -684,7 +683,7 @@ while running:
     grid.draw_grid(pygame, screen)
 
     # draw 'next shape'
-    draw_shape(player_next_shape)
+    draw_shape(next_shape)
 
     #--------------------------------------------------------------
     if(gb.game_over == False):
@@ -715,10 +714,15 @@ while running:
     # draw top points
     if( top_pts != None):
         for points in top_pts:
-            pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
-            # pygame.draw.rect(screen, gb.top_pts_colour, 
-            #                  [points[0], points[1], gb.grid_cel_rect[2], gb.grid_cel_rect[3]], 
-            #                  gb.top_pts_size, 3)
+            # draw as points
+            # pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
+            # draw as rects
+            pygame.draw.rect(screen, gb.shadow_colour, 
+                             [points[0]-gb.grid_square_size_half, 
+                              points[1]-gb.grid_square_size, 
+                              gb.grid_square_size, 
+                              gb.grid_square_size], 
+                              gb.top_pts_size, 5)
 
     # draw game-over
     if( gb.game_over == True ):
