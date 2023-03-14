@@ -14,4 +14,4 @@ class SoundManager:
     def play_main_theme(self):
         # song = AudioSegment.from_mp3("tetris.mp3")
         # play(song)
-        playsound('tetris.mp3', False)
+        playsound("sounds/tetris.mp3", False)
