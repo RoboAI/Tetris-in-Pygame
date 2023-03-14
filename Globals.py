@@ -1,6 +1,16 @@
 from Tetrimino import Tetrimino
 from MyFunctions import get_angle, get_distance, get_distance_from_pts
 
+
+
+controls = ["ARROWS : Move",
+            "SHIFT  : Rotate",
+            "ENTER  : SPEED",
+            "ESC    : Main Menu"]
+items = "\n".join(controls)
+print(len(controls))
+
+
 class Globals:
     def __init__(self):
         self.IBlock = [2, [[0,0],[1,0],[2,0],[3,0]]]

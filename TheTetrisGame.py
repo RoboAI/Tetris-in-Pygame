@@ -70,7 +70,6 @@ def get_new_player_shape_by_name(name) -> TetriminoShape:
 
 # start main theme
 sound_manager = SoundManager()
-sound_manager.play_main_theme()
 #---------------------
 
 #setup grid
@@ -130,18 +129,20 @@ def display_gameover():
 
 
 #---------------------
-
 # Get the Clock to limit frame-rate
 clock = pygame.time.Clock()
 #---------------------
 
-# Run until the user asks to quit
-running = True
+# main game loop
+tetris_level = True
 #---------------------
 
 # menu loop
 in_menu = True
 #---------------------
+
+# Run until the user asks to quit
+running = True
 
 # TODO: change grid_walls to dictionary
 left_wall = [gb.grid_actual_rect[0], gb.grid_actual_rect[1]]
@@ -159,8 +160,9 @@ game_shapes = []
 
 # grid layers. stores the blocks in layers.
 all_layers = {}
-for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
-    all_layers.update({i * gb.grid_square_size + gb.grid_offset_y: []})
+# fill the list from bottom-up
+# for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
+#     all_layers.update({i * gb.grid_square_size + gb.grid_offset_y: []})
 #---------------------
 
 # current shape
@@ -183,7 +185,7 @@ top_pts = None # markers for shape's top-coords
 draw_bounding_box = False
 #---------------------
 
-# increment when collided with 'down'. When twice-> then block.moving == False
+# this increments when collided with 'down'. When twice-> then block.moving == False
 touched_down_count = 1
 #---------------------
 
@@ -204,6 +206,32 @@ splash_anim = SplashScreen(pygame, screen)
 
 temp_rows_cleared_counter = 0
 #---------------------
+
+#---------------------------------------------------------
+# reset game
+def reset_game():
+    global player_shape
+    global next_shape
+    global game_shapes
+    global all_layers
+    global bounding_box
+    global top_pts
+    global temp_rows_cleared_counter
+
+    player_shape = get_new_player_shape(get_new_random_shape())
+    next_shape = get_new_pending_shape(get_new_random_shape())
+    game_shapes = []
+    all_layers = {}
+    bounding_box = None
+    top_pts = None
+    temp_rows_cleared_counter = 0
+    gb.game_over = False
+
+    # populate layers dictionary
+    for i in range(gb.grid_num_of_vt_squares - 1, -1, -1):#TODO: +10 for extra above
+        all_layers.update({i * gb.grid_square_size + gb.grid_offset_y: []})
+#---------------------------------------------------------
+
 
 #---------------------------------------------------------
 # draws a single TetriminoShape
@@ -581,22 +609,33 @@ def decrease_move_speed_by(shape: TetriminoShape, speed: int):
     auto_move_interval.set_interval(auto_move_interval.interval + speed)
     auto_move_interval_fast.set_interval(auto_move_interval_fast.interval + speed)
 
-# go back to menu
-def go_back_to_menu(*args):
-    pass
-
 #-------------------------------------------
+# skip menu
 def skip_menu(*args):
     global in_menu
+    global tetris_level
 
     in_menu = False
+    tetris_level = True
+#--------------------------
 
+# go back to menu
+def go_back_to_menu(*args):
+    global in_menu
+    global tetris_level
+
+    in_menu = True
+    tetris_level = False
+#--------------------------
+
+# quit game
 def quit_game():
+    global tetris_level
     global running
 
+    tetris_level = False
     running = False
 #-------------------------------------------
-
 
 
 #-------------------------------------------
@@ -611,6 +650,7 @@ menu_level_input.add_keydown_callback(pygame.K_DOWN, main_menu.keydown_down)
 menu_level_input.add_keydown_callback(pygame.K_UP, main_menu.keydown_up)
 #-------------------------------------------
 
+
 #-------------------------------------------
 main_level_input = InputProcessor()
 main_level_input.add_keydown_callback(pygame.K_LEFT, move_shape_left_once)
@@ -619,6 +659,7 @@ main_level_input.add_keydown_callback(pygame.K_RIGHT, move_shape_right_once)
 main_level_input.add_keydown_callback(pygame.K_DOWN, move_shape_down_once)
 main_level_input.add_keydown_callback(pygame.K_r, rotate_shape_cw)
 main_level_input.add_keydown_callback(pygame.K_RSHIFT, rotate_shape_cw)
+main_level_input.add_keydown_callback(pygame.K_LSHIFT, rotate_shape_cw)
 main_level_input.add_keydown_callback(pygame.K_SPACE, set_speed_max)
 main_level_input.add_keydown_callback(pygame.K_RETURN, set_speed_max)
 main_level_input.add_keydown_callback(pygame.K_ESCAPE, go_back_to_menu)
@@ -626,111 +667,119 @@ main_level_input.add_keyup_callback(pygame.K_SPACE, set_speed_to_normal)
 main_level_input.add_keyup_callback(pygame.K_RETURN, set_speed_to_normal)
 #-------------------------------------------
 
-#-------------------------------------------
-# menu loop
-while in_menu and running:
-     # set frame-rate and store time-elapsed since last frame
-    time_passed += clock.tick(60)
 
-    # process inputs
-    e = menu_level_input.process_inputs(None)
-    if(e != None and e[0] != None):
-        if(e[0].type == pygame.QUIT):
-            quit_game()
-        elif(e[1] != None and e[1] == "start"):
-            skip_menu()
+reset_game()
 
-    # draw the menu
-    main_menu.draw(screen)
-    
-     # Flip the display
-    pygame.display.flip()
-#-------------------------------------------
-
-#-------------------------------------------
-# reset it so behaves consistent everytime
-time_passed = 0
-#-------------------------------------------
-
-#------------------------------------------
-player_shape = get_new_player_shape(get_new_random_shape())
-next_shape = get_new_pending_shape(get_new_random_shape())
-#-------------------------------------------
-
-
-# main loop
 while running:
+    #-------------------------------------------
+    # menu loop
+    while in_menu:
+        # set frame-rate and store time-elapsed since last frame
+        time_passed += clock.tick(60)
 
-    # set frame-rate and store time-elapsed since last frame
-    time_passed += clock.tick(60)
+        # process inputs
+        e = menu_level_input.process_inputs(None)
+        if(e != None and e[0] != None):
+            if(e[0].type == pygame.QUIT):
+                quit_game()
+            elif(e[1] != None and e[1] == "start"):
+                skip_menu()
 
-    # process inputs
-    e = main_level_input.process_inputs(player_shape)
-    if(e != None and e[0] != None):
-        if(e[0].type == pygame.QUIT):
-            quit_game()
+        # draw the menu
+        main_menu.draw(screen)
+        
+        # Flip the display
+        pygame.display.flip()
+    #-------------------------------------------
 
-    # Fill the background
-    screen.fill(gb.grid_bk_colour)
-    
-    # draw left box
-    pygame.draw.rect(screen, [60,60,60], gb.infobox_rect, gb.border_thickness)
-    
-    # draw grid-box
-    pygame.draw.rect(screen, "black", gb.grid_rect, gb.border_thickness)
+    #-------------------------------------------
+    # reset it so behaves consistent everytime
+    time_passed = 0
+    #-------------------------------------------
 
-    # draw grid lines
-    grid.draw_grid(pygame, screen)
+    #------------------------------------------
+    player_shape = get_new_player_shape(get_new_random_shape())
+    next_shape = get_new_pending_shape(get_new_random_shape())
+    #-------------------------------------------
 
-    # draw 'next shape'
-    draw_shape(next_shape)
+    #-------------------------------------------
+    if tetris_level:
+        sound_manager.play_main_theme()
+    #-------------------------------------------
 
+    # main loop
+    while tetris_level:
+
+        # set frame-rate and store time-elapsed since last frame
+        time_passed += clock.tick(60)
+
+        # process inputs
+        e = main_level_input.process_inputs(player_shape)
+        if(e != None and e[0] != None):
+            if(e[0].type == pygame.QUIT):
+                quit_game()
+
+        # Fill the background
+        screen.fill(gb.grid_bk_colour)
+        
+        # draw left box
+        pygame.draw.rect(screen, [60,60,60], gb.infobox_rect, gb.border_thickness)
+        
+        # draw grid-box
+        pygame.draw.rect(screen, "black", gb.grid_rect, gb.border_thickness)
+
+        # draw grid lines
+        grid.draw_grid(pygame, screen)
+
+        # draw 'next shape'
+        draw_shape(next_shape)
+
+        #--------------------------------------------------------------
+        if(gb.game_over == False):
+            if( time_passed >= auto_move_interval_actual.interval ):
+
+                time_passed = 0
+
+                if player_shape.moving == True:
+                    result = move_shape_down_once(player_shape)
+                    if( result == True ):
+                        score_board.update_scores_texts(gb.player_score, gb.layers_cleared)
+        #--------------------------------------------------------------
+
+        # draw texts
+        score_board.draw_texts(screen)
+
+        # draw the moving one
+        draw_shape(player_shape)
+
+        # draw the rest of the shapes
+        for game_shape in game_shapes:
+            draw_shape(game_shape)
+        
+        # draw bounding box
+        if(draw_bounding_box != False and bounding_box != None):
+            pygame.draw.rect(screen, gb.bounding_box_colour, bounding_box, 1)
+        
+        # draw top points
+        if( top_pts != None):
+            for points in top_pts:
+                # draw as points
+                # pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
+                # draw as rects
+                pygame.draw.rect(screen, gb.shadow_colour, 
+                                [points[0]-gb.grid_square_size_half, 
+                                points[1]-gb.grid_square_size, 
+                                gb.grid_square_size, 
+                                gb.grid_square_size], 
+                                gb.top_pts_size, 5)
+
+        # draw game-over
+        if( gb.game_over == True ):
+            display_gameover()
+
+        # Flip the display
+        pygame.display.flip()
     #--------------------------------------------------------------
-    if(gb.game_over == False):
-        if( time_passed >= auto_move_interval_actual.interval ):
-
-            time_passed = 0
-
-            if player_shape.moving == True:
-                result = move_shape_down_once(player_shape)
-                if( result == True ):
-                    score_board.update_scores_texts(gb.player_score, gb.layers_cleared)
-    #--------------------------------------------------------------
-
-    # draw texts
-    score_board.draw_texts(screen)
-
-    # draw the moving one
-    draw_shape(player_shape)
-
-    # draw the rest of the shapes
-    for game_shape in game_shapes:
-        draw_shape(game_shape)
-    
-    # draw bounding box
-    if(draw_bounding_box != False and bounding_box != None):
-        pygame.draw.rect(screen, gb.bounding_box_colour, bounding_box, 1)
-    
-    # draw top points
-    if( top_pts != None):
-        for points in top_pts:
-            # draw as points
-            # pygame.draw.circle(screen, gb.top_pts_colour, points, gb.top_pts_size, 3)
-            # draw as rects
-            pygame.draw.rect(screen, gb.shadow_colour, 
-                             [points[0]-gb.grid_square_size_half, 
-                              points[1]-gb.grid_square_size, 
-                              gb.grid_square_size, 
-                              gb.grid_square_size], 
-                              gb.top_pts_size, 5)
-
-    # draw game-over
-    if( gb.game_over == True ):
-        display_gameover()
-
-    # Flip the display
-    pygame.display.flip()
-#--------------------------------------------------------------
 
 # Done! Time to quit.
 pygame.quit()
