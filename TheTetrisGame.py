@@ -668,9 +668,13 @@ main_level_input.add_keyup_callback(pygame.K_RETURN, set_speed_to_normal)
 #-------------------------------------------
 
 
-reset_game()
+#reset_game()
 
 while running:
+    # TODO: move this somewhere else
+    # reset the game
+    reset_game()
+    
     #-------------------------------------------
     # menu loop
     while in_menu:
