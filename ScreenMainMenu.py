@@ -8,9 +8,10 @@ from playsound import playsound
 gb = Globals
 
 class ScreenMainMenu:
-    MenuSelection = collections.namedtuple("MenuItem", ["name", "surface", "rect", "selected"])
     OFFSET_FROM_CENTER: float = 50
     SELECTION_SPACING: float = 10
+
+    MenuSelection = collections.namedtuple("MenuItem", ["name", "surface", "rect", "selected"])
 
     def __init__(self) -> None:
         self.title_logo: pygame.Surface = None
@@ -93,22 +94,32 @@ class ScreenMainMenu:
     def init_controls_menu(self):
         # setup font
         font = pygame.font.SysFont(self.font_family, int(self.font_size / 1.5))
+
+        # get height and width of current font
         font_height = font.size('A')[1]
         font_width = font.size('a')[0]
+
+        # get dimensions of the text that will be drawn
         max_width = max([len(x) for x in self.controls])
         max_width *= font_width
         max_height = (font_height + ScreenMainMenu.SELECTION_SPACING) * len(self.controls)
+
+        # create surface to fit calculations above
         surface = pygame.Surface((max_width, max_height))
+
+        # fill surface with normal background for consistency
         surface.fill(gb.grid_bk_colour)
 
         # setup surfaces for all menus
-        block_rect = surface.get_rect()       
         for i in range(len(self.controls)):
+            #render current line onto surface
             sub_surface = font.render(self.controls[i], True, self.on_font_colour)
             
+            # get rect for text drawn, and paste it onto main-surface
             rect = sub_surface.get_rect()
             surface.blit(sub_surface, (0, (i * rect.height) + (i * ScreenMainMenu.SELECTION_SPACING)))
 
+        # update member-variables
         self.controls_surface = surface
         self.controls_rc = pygame.Rect(gb.screen_width - surface.get_width() - 10,
                                        gb.screen_height / 2 - max_height / 2 + 100,

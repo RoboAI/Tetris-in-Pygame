@@ -14,77 +14,20 @@ from SoundManager import SoundManager
 from AutoDownMoveInterval import AutoDownMoveInterval
 from InputProcessor import InputProcessor
 from ScreenMainMenu import ScreenMainMenu
-from MyFunctions import get_angle, get_distance, get_distance_from_pts, get_points_on_top
+from ArtGameOver import ArtGameOver
+from MyFunctions import get_points_on_top
 
 
 gb = Globals()
 
 
-# get shape's corresponding colour
-def get_shape_colour(shape_name) -> str:
-    colour = gb.GameShapeColours.get(shape_name)
-    return colour
-
-# setup new shape from template
-def get_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
-    new_shape = TetriminoShape()
-    new_shape.desc = game_shape[0]
-    new_shape.set_shape(game_shape[1][1])
-    new_shape.rotation_index = game_shape[1][0]
-    new_shape.set_colour(get_shape_colour(new_shape.desc))
-    return new_shape
-
-# setup new player shape from template
-def get_new_player_shape(game_shape):# game_shape is from Globals.GameShape[i]
-    new_shape = get_new_shape(game_shape)
-
-    # set its position to the play area
-    new_shape.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
-    new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
-    return new_shape
-
-# setup new pending shape from template, using the function above
-def get_new_pending_shape(game_shape):# game_shape is from Globals.GameShape[i]
-    new_shape = get_new_shape(game_shape)
-
-    # set its position to the infobox
-    new_shape.set_pos(gb.infobox_next_shape_xy[0], gb.infobox_next_shape_xy[1], gb.grid_square_size)
-    return new_shape
-
-# gets shape tenmplate by random
-def get_new_random_shape():
-    items = list(gb.GameShapes.items())
-    item = random.choice(items)
-    return item
-
-# get shape template by name
-def get_shape_template(name: str):
-    # find shape_name in GameShapes
-    item = [i for i in gb.GameShapes.items() if i[0] == name]
-    return item[0] if len(item) > 0 else None
-
-# gets shape template by name
-def get_new_player_shape_by_name(name) -> TetriminoShape:
-    return get_new_player_shape( get_shape_template(name) )
-
-
-# start main theme
+# load sound-manager
 sound_manager = SoundManager()
 #---------------------
 
-#setup grid
-grid = Grid()
-#---------------------
 
-# these control the speed of the moving shape
-auto_move_interval = AutoDownMoveInterval(750, 50) # original value/normal speed
-auto_move_interval_fast = AutoDownMoveInterval(50, 50) # temporarily used to speed-up/slow-down the game
-auto_move_interval_actual = auto_move_interval # actual value used to apply to the game. switches between the two
-#---------------------
 
-#used to calculate time between frames to control gameplay
-time_passed = 0
-#---------------------
+
 
 #init pygame
 pygame.init()
@@ -98,8 +41,20 @@ screen = pygame.display.set_mode([gb.screen_width, gb.screen_height])
 pygame.display.set_caption(gb.game_title)
 #---------------------
 
+# Get the Clock to limit frame-rate
+clock = pygame.time.Clock()
+#---------------------
+
 # font setup
 pygame.font.init()
+#---------------------
+
+#used to calculate time between frames to control gameplay
+time_passed = 0
+#---------------------
+
+#setup grid
+grid = Grid()
 #---------------------
 
 # score board
@@ -107,30 +62,8 @@ score_board = ScoreBoard(pygame)
 score_board.init_fonts(gb.titles_font_colour, gb.scores_font_colour, gb.layers_score_title, gb.player_score_title)
 #---------------------
 
-# TODO: move this to its own file
-#---------------------------------------------------------
-# game over font
-game_over_font = pygame.font.SysFont(gb.game_main_font, 40)
-game_over_surface = game_over_font.render('Game Over', True, gb.game_over_font_colour)
-gameover_banner_rc = pygame.Rect(gb.grid_actual_rect[0], 
-                                 gb.grid_actual_rect[3] / 2 - game_over_surface.get_height() / 2,
-                                 gb.grid_width, 
-                                 game_over_surface.get_height())
-
-gameover_text_rc = pygame.Rect(gameover_banner_rc.left + (gameover_banner_rc.width / 2 - game_over_surface.get_width() / 2),
-                        gameover_banner_rc.top + (gameover_banner_rc.height / 2 - game_over_surface.get_height() / 2),
-                        game_over_surface.get_width(),
-                        game_over_surface.get_height())
-
-def display_gameover():
-    pygame.draw.rect(screen, "black", gameover_banner_rc)
-    screen.blit(game_over_surface, gameover_text_rc)
-#---------------------------------------------------------
-
-
-#---------------------
-# Get the Clock to limit frame-rate
-clock = pygame.time.Clock()
+# game over banner
+game_over_banner = ArtGameOver()
 #---------------------
 
 # main game loop
@@ -143,6 +76,13 @@ in_menu = True
 
 # Run until the user asks to quit
 running = True
+#---------------------
+
+# these control the speed of the moving shape
+auto_move_interval = AutoDownMoveInterval(750, 50) # game's normal speed
+auto_move_interval_fast = AutoDownMoveInterval(50, 50) # temporarily used to speed-up/slow-down the game
+auto_move_interval_actual = auto_move_interval # actual value used to apply to the game. switches between the two
+#---------------------
 
 # TODO: change grid_walls to dictionary
 left_wall = [gb.grid_actual_rect[0], gb.grid_actual_rect[1]]
@@ -155,6 +95,7 @@ grid_walls = [["left-wall", left_wall],
 
 
 #---------------------
+# holds all the shapes that have landed
 game_shapes = []
 #---------------------
 
@@ -206,6 +147,59 @@ splash_anim = SplashScreen(pygame, screen)
 
 temp_rows_cleared_counter = 0
 #---------------------
+
+
+#---------------------------------------------------------
+# get shape's corresponding colour
+def get_shape_colour(shape_name) -> str:
+    colour = gb.GameShapeColours.get(shape_name)
+    return colour
+
+# setup new shape from template
+def get_new_shape(game_shape):# game_shape is from Globals.GameShapes[i]
+    new_shape = TetriminoShape()
+    new_shape.desc = game_shape[0]
+    new_shape.set_shape(game_shape[1][1])
+    new_shape.rotation_index = game_shape[1][0]
+    new_shape.set_colour(get_shape_colour(new_shape.desc))
+    return new_shape
+
+# setup new player shape from template
+def get_new_player_shape(game_shape):# game_shape is from Globals.GameShape[i]
+    new_shape = get_new_shape(game_shape)
+
+    # set its position to the play area
+    new_shape.set_pos(gb.grid_offset_x, gb.grid_offset_y, gb.grid_square_size)
+    new_shape.add_to_pos(gb.grid_square_size * 7, gb.grid_square_size * -2)
+    return new_shape
+
+# setup new pending shape from template, using the function above
+def get_new_pending_shape(game_shape):# game_shape is from Globals.GameShape[i]
+    new_shape = get_new_shape(game_shape)
+
+    # set its position to the infobox
+    new_shape.set_pos(gb.infobox_next_shape_xy[0], gb.infobox_next_shape_xy[1], gb.grid_square_size)
+    return new_shape
+
+# gets shape tenmplate by random
+def get_new_random_shape():
+    items = list(gb.GameShapes.items())
+    item = random.choice(items)
+    return item
+
+# get shape template by name
+def get_shape_template(name: str):
+    # find shape_name in GameShapes
+    item = [i for i in gb.GameShapes.items() if i[0] == name]
+    return item[0] if len(item) > 0 else None
+
+# gets shape template by name
+def get_new_player_shape_by_name(name) -> TetriminoShape:
+    return get_new_player_shape( get_shape_template(name) )
+#---------------------------------------------------------
+
+
+
 
 #---------------------------------------------------------
 # reset game
@@ -416,7 +410,8 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
 
     scores_updated = False
 
-    #pygame.display.set_caption("touch down")
+    # TODO: move this somewhere else
+    sound_manager.play_touch_down()
 
     # make it stop moving
     player_shape.moving = False
@@ -430,7 +425,9 @@ def shape_touched_down(current_shape: TetriminoShape) -> bool:
         if( block.shape[1] <= 0 ):
             # TODO: this shouldn't be here
             # this function should return a tuple containing more details
-            gb.game_over = True
+            gb.game_over = True 
+            sound_manager.stop_main_theme()
+            sound_manager.play_game_over()
             return False
     #------------------------
 
@@ -579,6 +576,8 @@ def set_speed_max(shape: TetriminoShape):
     global auto_move_interval_fast
 
     auto_move_interval_actual = auto_move_interval_fast
+    # TODO: add this sound
+    sound_manager.play_speed_falling()
 
 
 # increases speed to max
@@ -674,6 +673,8 @@ while running:
     # TODO: move this somewhere else
     # reset the game
     reset_game()
+
+    sound_manager.stop_main_theme()
     
     #-------------------------------------------
     # menu loop
@@ -748,6 +749,7 @@ while running:
                     result = move_shape_down_once(player_shape)
                     if( result == True ):
                         score_board.update_scores_texts(gb.player_score, gb.layers_cleared)
+                        sound_manager.play_rows_cleared()
         #--------------------------------------------------------------
 
         # draw texts
@@ -779,7 +781,7 @@ while running:
 
         # draw game-over
         if( gb.game_over == True ):
-            display_gameover()
+            game_over_banner.draw(screen)
 
         # Flip the display
         pygame.display.flip()
